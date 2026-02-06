@@ -54,29 +54,26 @@
         .btn-primary { background: var(--primary); color: white; }
         .btn-primary:disabled { background: #94a3b8; }
         .btn-outline { background: transparent; border: 2px solid #cbd5e1; color: #475569; }
-        
-        /* SCANNER WRAPPER - Fixed Layout */
+
         .scanner-wrapper { 
             position: relative; 
             width: 100%; 
-            min-height: 250px; /* Default height for black box */
+            min-height: 250px; 
             background: #0f172a; 
             border-radius: 8px; 
             overflow: hidden; 
             margin-bottom: 12px;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
-            /* Remove Flexbox to avoid layout shifts */
+
             display: block; 
         }
-        
-        /* Canvas fills the wrapper */
+
         canvas { 
             display: block; 
             width: 100%; 
             height: auto; 
         }
 
-        /* ABSOLUTE CENTERED UPLOAD HINT */
         #upload-hint {
             position: absolute;
             top: 50%;
@@ -84,13 +81,12 @@
             transform: translate(-50%, -50%);
             text-align: center;
             color: white;
-            pointer-events: none; /* Allows click through to container */
+            pointer-events: none; 
             z-index: 10;
         }
         
         .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
-        /* RESULT STYLES */
         .result-box { display: none; animation: slideUp 0.5s ease-out; margin-top: 20px; border: 2px solid var(--primary); }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
@@ -118,10 +114,10 @@
         }
         .d-cell { font-size: 10px; text-align: center; padding: 6px 0; background: #f1f5f9; border-radius: 4px; cursor: pointer; color: #475569; font-weight: 600; }
         .d-cell.filled { background: var(--primary); color: white; }
-      	/* DELETED QUESTION STYLE */
+
         .d-cell.deleted { 
             opacity: 0.5; 
-            background: #94a3b8 !important; /* Gray */
+            background: #94a3b8 !important; 
             color: #fff; 
             text-decoration: line-through; 
             border: 1px dashed #475569;
@@ -139,35 +135,34 @@
         .spinner { width: 45px; height: 45px; border: 5px solid #e2e8f0; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-      /* NEW PRINT STYLES */
         @media print {
-            @page { margin: 1cm; size: A4; } /* थोड़े बड़े मार्जिन */
+            @page { margin: 1cm; size: A4; }
             body { background: white; margin: 0; padding: 0; -webkit-print-color-adjust: exact; }
             .container, .card, .btn, .loading { display: none !important; }
             
             #print-container { 
                 display: block !important; 
                 width: 100%; 
-                height: auto; /* Height auto कर दी ताकि कंटेंट न कटे */
+                height: auto; 
                 padding: 10px;
                 box-sizing: border-box;
             }
-            /* बाकी स्टाइलिंग अब सीधे HTML टैग्स में इनलाइन है ताकि प्रिंट में पक्का आए */
+
         }
         #print-container { display: none; }
-      /* Mobile Only Paste Button Logic */
+     
         @media (max-width: 768px) {
             .mobile-paste-btn {
-                display: flex !important; /* मोबाइल पर दिखाओ */
+                display: flex !important; 
                 align-items: center;
                 justify-content: center;
                 background: #fff;
                 color: var(--primary);
                 border-color: var(--primary);
             }
-            /* Controls ग्रिड को एडजस्ट करें ताकि बटन फिट हो जाए */
+
             .controls {
-                grid-template-columns: 1fr auto 1fr; /* Upload | Paste | Scan */
+                grid-template-columns: 1fr auto 1fr; 
             }
         }
     </style>
@@ -319,7 +314,6 @@
         { id: 'shift6', min: 3169316, max: 3581166, label: '21 Sep - Shift 6' }
     ];
 
-    // SAFE INITIALIZATION (Fixed Crash)
     let corners = [{x:0.04, y:0.04}, {x:0.96, y:0.04}, {x:0.96, y:0.96}, {x:0.04, y:0.96}];
     let canvas, ctx, imgObj = new Image();
     let activeCorner = -1;
@@ -340,7 +334,6 @@
         window.addEventListener('resize', resizeCanvas);
     };
 
-    // --- UNIVERSAL FILE LOADER (Handles Upload & Paste) ---
     async function processFile(file) {
         if (!file) return;
 
@@ -384,25 +377,22 @@
         }
     }
 
-    // 1. Handle Regular Upload
     function handleFileSelect(input) {
         processFile(input.files[0]);
     }
 
-    // 2. Handle Ctrl+V (Paste on PC)
     document.addEventListener('paste', function(e) {
         const items = e.clipboardData.items;
         for (let i = 0; i < items.length; i++) {
             if (items[i].type.indexOf('image') !== -1) {
                 const blob = items[i].getAsFile();
                 processFile(blob);
-                e.preventDefault(); // Default paste text behavior roko
+                e.preventDefault();
                 break;
             }
         }
     });
 
-    // 3. Handle Mobile Paste Button
     async function handleMobilePaste() {
         try {
             const items = await navigator.clipboard.read();
@@ -421,17 +411,16 @@
         }
     }
 
-    // NEW: VISUAL CANVAS ONLY (Matches Screen Size for Smooth Dragging)
     function resizeCanvas() {
         const wrap = document.querySelector('.scanner-wrapper');
         if(wrap && canvas) {
             canvas.width = wrap.clientWidth;
-            // Calculate height based on image aspect ratio, else default
+
             if(imgObj.src && imgObj.naturalWidth > 0) {
                 const ratio = imgObj.naturalHeight / imgObj.naturalWidth;
                 canvas.height = canvas.width * ratio;
             } else {
-                canvas.height = 250; // Default black box height
+                canvas.height = 250; 
             }
             draw();
         }
@@ -440,13 +429,11 @@
     function draw() {
         if(!ctx) return;
         ctx.clearRect(0,0, canvas.width, canvas.height);
-        
-        // Draw Image Scaled to Canvas
+
         if(imgObj.src) {
             ctx.drawImage(imgObj, 0, 0, canvas.width, canvas.height);
         }
 
-        // 1. Draw Red Boundary
         if(!Array.isArray(corners) || corners.length !== 4) return; // Crash Prevention
 
         ctx.beginPath(); 
@@ -456,7 +443,6 @@
         for(let i=1; i<4; i++) ctx.lineTo(corners[i].x * canvas.width, corners[i].y * canvas.height);
         ctx.closePath(); ctx.stroke();
 
-        // 2. Draw VISIBLE Green Dots (Overlay Logic)
         ctx.fillStyle = '#00ff00'; 
         const dotRadius = Math.max(2, canvas.width * 0.007); 
 
@@ -470,7 +456,7 @@
                 }
 
                 if (isRelevant) {
-                    // Use Visual Coordinates
+
                     let pt = getGridPointVisual(r, c);
                     ctx.beginPath(); 
                     ctx.arc(pt.x, pt.y, dotRadius, 0, Math.PI*2);
@@ -479,7 +465,6 @@
             }
         }
 
-        // 3. Draw Handles
         corners.forEach(p => {
             ctx.beginPath(); 
             ctx.arc(p.x*canvas.width, p.y*canvas.height, 8, 0, Math.PI*2);
@@ -488,7 +473,6 @@
         });
     }
 
-    // Helper for Visual Drawing
     function getGridPointVisual(row, col) {
         let u = (col) / (GRID_COLS - 1); 
         let v = (row) / (GRID_ROWS - 1);
@@ -552,25 +536,23 @@
                 }
             }
         } catch(e) { console.log("Resetting layout"); }
-        // Default fallback if error or empty
+
         corners = [{x:0.04, y:0.04}, {x:0.96, y:0.04}, {x:0.96, y:0.96}, {x:0.04, y:0.96}];
     }
 
-    // --- HIGH ACCURACY SCANNING (Hidden Canvas) ---
     function processScan() {
         document.getElementById('loader').style.display = 'flex';
         
         setTimeout(() => {
-            // 1. Create Offline High-Res Canvas
+
             const dataCanvas = document.createElement('canvas');
             dataCanvas.width = imgObj.naturalWidth;
             dataCanvas.height = imgObj.naturalHeight;
             const dataCtx = dataCanvas.getContext('2d');
             dataCtx.drawImage(imgObj, 0, 0);
 
-            // 2. Helper to get pixel data using Normalized Coords (0-1)
             function getPixelDarkness(row, col) {
-                // Calculate position on High-Res Image
+
                 let u = (col) / (GRID_COLS - 1); 
                 let v = (row) / (GRID_ROWS - 1);
                 
@@ -586,8 +568,7 @@
                 let sy = Math.floor(ry);
                 
                 if(sx < 0 || sy < 0 || sx >= dataCanvas.width || sy >= dataCanvas.height) return 255;
-                
-                // Sample Logic (Adaptive Size)
+
                 let sampleSize = Math.max(1, Math.floor(dataCanvas.width * 0.004));
                 try {
                     let p = dataCtx.getImageData(sx - Math.floor(sampleSize/2), sy - Math.floor(sampleSize/2), sampleSize, sampleSize).data;
@@ -597,7 +578,6 @@
                 } catch(e) { return 255; }
             }
 
-            // 3. Scan Roll
             detectedRoll = "";
             const digitMap = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
             for(let c=0; c<=6; c++) {
@@ -609,7 +589,6 @@
                 detectedRoll += digit;
             }
 
-            // 4. Scan Booklet (Fixed)
             detectedBooklet = "";
             for(let c=9; c<=16; c++) {
                 let minV = 255, digit = "?";
@@ -619,10 +598,9 @@
                 }
                 detectedBooklet += digit;
             }
-            // NEW: Remove trailing '?' if last columns are empty
+
             detectedBooklet = detectedBooklet.replace(/\?+$/, '');
 
-            // 5. Scan Answers
             detectedAnswers.fill(null);
             const blocks = [{c:2,o:0}, {c:11,o:30}, {c:20,o:60}, {c:29,o:90}];
             blocks.forEach(b => {
@@ -676,7 +654,7 @@
 
    function autoCalculateBestSet(sData) {
         const validQ = sData.questions.length - sData.questions.filter(q => q.deleted).length;
-        // Prevent division by zero if all deleted (rare case)
+
         const marksPerQ = validQ > 0 ? (200 / validQ) : 0;
         const negMark = marksPerQ / 3;
 
@@ -691,32 +669,28 @@
             }
         });
 
-        // UI Update Stats
         document.getElementById('detected-set').innerText = bestSet;
         document.getElementById('res-score').innerText = bestScore.toFixed(4);
         document.getElementById('res-correct').innerText = bestStats.c;
         document.getElementById('res-wrong').innerText = bestStats.w;
         document.getElementById('res-skip').innerText = bestStats.s;
-        
-        // NEW: Show Deleted Count
+
         document.getElementById('res-deleted').innerText = bestStats.d;
-        
-        // GRID GENERATION (Modified for Deleted Logic)
+
         const gridDiv = document.getElementById('detected-grid');
         gridDiv.innerHTML = '';
         
-        const qOrder = sData.seriesOrder[bestSet]; // Get Mapping for best set
+        const qOrder = sData.seriesOrder[bestSet]; 
 
         detectedAnswers.forEach((ans, i) => {
             let d = document.createElement('div');
             let className = 'd-cell ' + (ans ? 'filled' : '');
-            
-            // Check if this question is DELETED
+
             if (qOrder && qOrder[i]) {
                 const masterIdx = qOrder[i];
                 const masterQ = sData.questions[masterIdx - 1];
                 if (masterQ && masterQ.deleted) {
-                    className += ' deleted'; // Add faded style
+                    className += ' deleted'; 
                 }
             }
 
@@ -728,15 +702,14 @@
     }
 
    function getScore(setCode, sData, marksPerQ, negMark) {
-        let c = 0, w = 0, s = 0, d = 0; // Added 'd' for deleted
+        let c = 0, w = 0, s = 0, d = 0; 
         const qOrder = sData.seriesOrder[setCode];
         const optConfig = sData.seriesOptionOrder ? sData.seriesOptionOrder[setCode] : null;
 
         qOrder.forEach((masterIdx, userIdx) => {
             if (userIdx >= detectedAnswers.length) return;
             const masterQ = sData.questions[masterIdx - 1];
-            
-            // NEW: Count Deleted Questions
+
             if (masterQ.deleted) { 
                 d++; 
                 return; 
@@ -764,27 +737,19 @@
         return { score: (c * marksPerQ) - (w * negMark), c, w, s, d };
     }
 
- function triggerPrint() {
-        const d = new Date();
-        document.getElementById('p-date').innerText = d.toLocaleDateString();
-        
-        // Basic Info
+function triggerPrint() {
+
         document.getElementById('p-roll').innerText = document.getElementById('res-roll').innerText;
         document.getElementById('p-booklet').innerText = document.getElementById('res-booklet').innerText;
         document.getElementById('p-shift').innerText = document.getElementById('res-shift').innerText;
         document.getElementById('p-set').innerText = document.getElementById('detected-set').innerText;
-        
-        // Scores (Added Skip)
+
         document.getElementById('p-score').innerText = document.getElementById('res-score').innerText;
         document.getElementById('p-correct').innerText = document.getElementById('res-correct').innerText;
         document.getElementById('p-wrong').innerText = document.getElementById('res-wrong').innerText;
-   			// NEW: Update Deleted Count in Print
         document.getElementById('p-deleted').innerText = document.getElementById('res-deleted').innerText;
-        
-        // NEW: Update Skip Count in Print
         document.getElementById('p-skip').innerText = document.getElementById('res-skip').innerText;
-        
-        // Clean Image Logic
+
         if(imgObj.src) {
              document.getElementById('print-omr-img').src = imgObj.src;
         }
