@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head> 
+  	<link rel="manifest" href="manifest.json">
+		<meta name="theme-color" content="#1e1e2e">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OMR Master Scanner (Fixed)</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  	<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+
+    <style>
+        :root { 
+            --primary: #2563eb; 
+            --primary-dark: #1e40af;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --bg: #f8fafc; 
+            --surface: #ffffff;
+        }
+        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg); 
+            color: #1e293b; 
+            margin: 0; 
+            padding: 10px; 
+            overscroll-behavior: none;
+        }
+        
+        .container { max-width: 500px; margin: 0 auto; padding-bottom: 60px; }
+        
+        .card { 
+            background: var(--surface); 
+            padding: 16px; 
+            border-radius: 12px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+            margin-bottom: 12px; 
+            border: 1px solid #e2e8f0; 
+        }
+
+        h2 { margin: 0 0 12px 0; color: #0f172a; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; font-weight: 700; }
+
+        .btn { 
+            width: 100%; padding: 12px; border: none; border-radius: 8px; 
+            font-weight: 600; cursor: pointer; display: flex; align-items: center; 
+            justify-content: center; gap: 8px; font-size: 1rem; transition: 0.2s;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:disabled { background: #94a3b8; }
+        .btn-outline { background: transparent; border: 2px solid #cbd5e1; color: #475569; }
+        
+        /* SCANNER WRAPPER - Fixed Layout */
+        .scanner-wrapper { 
+            position: relative; 
+            width: 100%; 
+            min-height: 250px; /* Default height for black box */
+            background: #0f172a; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            margin-bottom: 12px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            /* Remove Flexbox to avoid layout shifts */
+            display: block; 
+        }
+        
+        /* Canvas fills the wrapper */
+        canvas { 
+            display: block; 
+            width: 100%; 
+            height: auto; 
+        }
+
+        /* ABSOLUTE CENTERED UPLOAD HINT */
+        #upload-hint {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            pointer-events: none; /* Allows click through to container */
+            z-index: 10;
+        }
+        
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+        /* RESULT STYLES */
+        .result-box { display: none; animation: slideUp 0.5s ease-out; margin-top: 20px; border: 2px solid var(--primary); }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .result-header {
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            color: white; padding: 20px; border-radius: 10px;
+            text-align: center; margin-bottom: 15px;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+        }
+        
+        .score-val { font-size: 3rem; font-weight: 800; line-height: 1; margin: 5px 0; }
+        .meta-info { display: flex; justify-content: space-between; background: rgba(255,255,255,0.1); padding: 8px; border-radius: 6px; font-size: 0.85rem; margin-top: 10px; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .stat-item { background: #f8fafc; padding: 10px 5px; border-radius: 8px; text-align: center; border: 1px solid #e2e8f0; }
+        .st-num { font-size: 1.3rem; font-weight: 800; display: block; }
+        .st-lbl { font-size: 0.7rem; color: #64748b; font-weight: 700; text-transform: uppercase; }
+        
+        .c-green { color: var(--success); } .c-red { color: var(--danger); } .c-yellow { color: #d97706; }
+
+        .detected-grid { 
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(35px, 1fr)); gap: 5px; 
+            max-height: 200px; overflow-y: auto; margin-top: 15px; padding: 5px;
+            background: #fff; border: 1px solid #e2e8f0; border-radius: 6px;
+        }
+        .d-cell { font-size: 10px; text-align: center; padding: 6px 0; background: #f1f5f9; border-radius: 4px; cursor: pointer; color: #475569; font-weight: 600; }
+        .d-cell.filled { background: var(--primary); color: white; }
+      	/* DELETED QUESTION STYLE */
+        .d-cell.deleted { 
+            opacity: 0.5; 
+            background: #94a3b8 !important; /* Gray */
+            color: #fff; 
+            text-decoration: line-through; 
+            border: 1px dashed #475569;
+        }
+        .c-gray { color: #64748b; }
+
+        .helper-text { 
+            font-size: 0.85rem; color: #334155; margin-bottom: 10px; 
+            text-align: center; background: #e0f2fe; padding: 10px; 
+            border-radius: 6px; border: 1px solid #bae6fd;
+            line-height: 1.4;
+        }
+
+        .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 999; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        .spinner { width: 45px; height: 45px; border: 5px solid #e2e8f0; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+      /* NEW PRINT STYLES */
+        @media print {
+            @page { margin: 1cm; size: A4; } /* थोड़े बड़े मार्जिन */
+            body { background: white; margin: 0; padding: 0; -webkit-print-color-adjust: exact; }
+            .container, .card, .btn, .loading { display: none !important; }
+            
+            #print-container { 
+                display: block !important; 
+                width: 100%; 
+                height: auto; /* Height auto कर दी ताकि कंटेंट न कटे */
+                padding: 10px;
+                box-sizing: border-box;
+            }
+            /* बाकी स्टाइलिंग अब सीधे HTML टैग्स में इनलाइन है ताकि प्रिंट में पक्का आए */
+        }
+        #print-container { display: none; }
+      /* Mobile Only Paste Button Logic */
+        @media (max-width: 768px) {
+            .mobile-paste-btn {
+                display: flex !important; /* मोबाइल पर दिखाओ */
+                align-items: center;
+                justify-content: center;
+                background: #fff;
+                color: var(--primary);
+                border-color: var(--primary);
+            }
+            /* Controls ग्रिड को एडजस्ट करें ताकि बटन फिट हो जाए */
+            .controls {
+                grid-template-columns: 1fr auto 1fr; /* Upload | Paste | Scan */
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card" id="scanner-card">
+        <h2><i class="fas fa-bullseye"></i> OMR Scanner</h2>
+        <div class="helper-text">
+            <b><i class="fas fa-hand-point-up"></i> निर्देश:</b> लाल कोनों को सेट करें। हरे गोले (Green Dots) एकदम OMR के काले गोलों के ऊपर आने चाहिए।
+        </div>
+        
+        <div class="scanner-wrapper" id="scan-wrap" onclick="if(!imgObj.src) document.getElementById('fileIn').click()">
+            <canvas id="omrCanvas"></canvas>
+            
+            <div id="upload-hint">
+                <i class="fas fa-camera" style="font-size:32px; opacity:0.9; margin-bottom:8px;"></i>
+                <div style="font-size:14px; font-weight:600;">Tap to Upload OMR</div>
+                <div style="font-size:10px; opacity:0.7;">High Accuracy Mode</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-outline" onclick="document.getElementById('fileIn').click()">
+                <i class="fas fa-upload"></i> Re-Upload
+            </button>
+          	<button class="btn btn-outline mobile-paste-btn" onclick="handleMobilePaste()" style="display:none; width: auto; padding: 12px 15px;">
+                <i class="fas fa-paste"></i>
+            </button>
+            <input type="file" id="fileIn" accept="image/*,application/pdf" style="display:none" onchange="handleFileSelect(this)">
+            
+            <button class="btn btn-primary" id="scanBtn" onclick="processScan()" disabled>
+                <i class="fas fa-bolt"></i> Scan Details
+            </button>
+        </div>
+    </div>
+
+    <div class="card result-box" id="result-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <div style="font-size:0.9rem; font-weight:700; color:#c2410c;">SET: <span id="detected-set">--</span></div>
+            <button class="btn btn-outline" style="width:auto; padding:5px 10px; font-size:0.8rem;" onclick="location.reload()">
+                <i class="fas fa-redo"></i> Reset
+            </button>
+        </div>
+
+        <div class="result-header">
+            <div class="score-val" id="res-score">0.00</div>
+            <div style="font-size:0.8rem; opacity:0.9;">Total RAW Score (Out of 200)</div>
+            
+            <div class="meta-info">
+                <div>Roll: <b id="res-roll">--</b></div>
+                <div>Booklet: <b id="res-booklet">--</b></div>
+            </div>
+            <div style="margin-top:5px; font-size:0.8rem; background:rgba(0,0,0,0.2); padding:4px; border-radius:4px;" id="res-shift">Shift Detecting...</div>
+        </div>
+        
+        <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr);">
+            <div class="stat-item">
+                <span class="st-num c-green" id="res-correct">0</span>
+                <span class="st-lbl">Correct</span>
+            </div>
+            <div class="stat-item">
+                <span class="st-num c-red" id="res-wrong">0</span>
+                <span class="st-lbl">Wrong</span>
+            </div>
+            <div class="stat-item">
+                <span class="st-num c-yellow" id="res-skip">0</span>
+                <span class="st-lbl">Skip</span>
+            </div>
+            <div class="stat-item">
+                <span class="st-num c-gray" id="res-deleted">0</span>
+                <span class="st-lbl">Delete</span>
+            </div>
+        </div>
+        
+        <div id="preview-grid-wrapper" style="display:none;">
+             <div class="detected-grid" id="detected-grid"></div>
+        </div>
+
+        <button class="btn btn-primary" onclick="triggerPrint()" style="margin-top:15px; background:#1e293b;">
+            <i class="fas fa-print"></i> Print Report (A4)
+        </button>
+    </div>
+</div>
+
+<div id="print-container">
+    <div class="print-header" style="text-align: center; margin-bottom: 20px;">
+        <div class="ph-title" style="font-size: 24px; font-weight: 900; text-transform: uppercase; color: #1e40af;">Result Report 4th Class</div>
+        <div style="font-size:12px; color:#555;"> OMR Auto-Evaluation by MP SALODIYA | Date: <span id="p-date"></span></div>
+    </div>
+
+    <div class="print-score" style="display: flex; flex-direction: column; gap: 15px; background: #f3f4f6 !important; border: 2px solid #1e40af; border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+        
+        <div style="display: flex; justify-content: space-around; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+            <div style="text-align:center;">
+                <span class="ps-val" id="p-score" style="font-size: 28px; font-weight: 800; color: #1e40af;">0.00</span>
+                <span class="ps-lbl" style="font-size: 10px; text-transform: uppercase; font-weight: bold;">Total RAW Score</span>
+            </div>
+            <div style="text-align:center; color:#16a34a;">
+                <span class="ps-val" id="p-correct" style="font-size: 24px; font-weight: 800;">0</span>
+                <span class="ps-lbl" style="font-size: 10px; text-transform: uppercase; font-weight: bold;">Correct</span>
+            </div>
+            <div style="text-align:center; color:#dc2626;">
+                <span class="ps-val" id="p-wrong" style="font-size: 24px; font-weight: 800;">0</span>
+                <span class="ps-lbl" style="font-size: 10px; text-transform: uppercase; font-weight: bold;">Wrong</span>
+            </div>
+          	<div style="text-align:center; color:#d97706;">
+                <span class="ps-val" id="p-skip" style="font-size: 24px; font-weight: 800;">0</span>
+                <span class="ps-lbl" style="font-size: 10px; text-transform: uppercase; font-weight: bold;">Skip</span>
+            </div>
+          	<div style="text-align:center; color:#64748b;">
+                <span class="ps-val" id="p-deleted" style="font-size: 24px; font-weight: 800;">0</span>
+                <span class="ps-lbl" style="font-size: 10px; text-transform: uppercase; font-weight: bold;">Deleted</span>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #333; font-weight: 600;">
+            <div>Roll No: <span id="p-roll" style="font-weight: 800; font-size: 14px;"></span></div>
+            <div>Booklet: <span id="p-booklet" style="font-weight: 800; font-size: 14px;"></span></div>
+            <div>Set: <span id="p-set" style="font-weight: 800; font-size: 14px; color:#d97706;"></span></div>
+            <div>Shift: <span id="p-shift"></span></div>
+        </div>
+    </div>
+
+    <div style="font-size:10px; font-weight:bold; margin-bottom:5px; border-bottom:1px solid #ccc;">Clean OMR Scan Proof:</div>
+    <div class="print-omr-wrapper" style="text-align: center; width: 100%; max-height: 20cm; overflow: hidden; border: 1px solid #ddd; display: flex; justify-content: center;">
+        <img id="print-omr-img" class="print-omr" alt="OMR Scan" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+    </div>
+    <div class="print-footer" style="position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; font-size: 10px; color: #888; background: #fff; padding: 5px;">Generated by MP SALODIYA</div>
+</div>
+<div class="loading" id="loader">
+    <div class="spinner"></div>
+    <p style="margin-top:15px; font-weight:600; color:#475569;">Scanning (High Quality)...</p>
+</div>
+
+<script src="questions-data.js"></script>
+
+<script>
+    const GRID_ROWS = 41;
+    const GRID_COLS = 37;
+
+    const SHIFT_RANGES = [
+        { id: 'shift1', min: 110101, max: 1521943, label: '19 Sep - Shift 1' },
+        { id: 'shift2', min: 1521944, max: 1933786, label: '19 Sep - Shift 2' },
+        { id: 'shift3', min: 1933787, max: 2345629, label: '20 Sep - Shift 3' },
+        { id: 'shift4', min: 2345630, max: 2757472, label: '20 Sep - Shift 4' },
+        { id: 'shift5', min: 2757473, max: 3169315, label: '21 Sep - Shift 5' },
+        { id: 'shift6', min: 3169316, max: 3581166, label: '21 Sep - Shift 6' }
+    ];
+
+    // SAFE INITIALIZATION (Fixed Crash)
+    let corners = [{x:0.04, y:0.04}, {x:0.96, y:0.04}, {x:0.96, y:0.96}, {x:0.04, y:0.96}];
+    let canvas, ctx, imgObj = new Image();
+    let activeCorner = -1;
+
+    let detectedRoll = "";
+    let detectedBooklet = "";
+    let detectedAnswers = new Array(120).fill(null);
+    const optionsList = ['A', 'B', 'C', 'D', 'E'];
+
+    window.onload = function() {
+        canvas = document.getElementById('omrCanvas');
+        ctx = canvas.getContext('2d');
+        loadLayout();
+        
+        ['mousedown', 'touchstart'].forEach(e => canvas.addEventListener(e, startDrag, {passive: false}));
+        ['mousemove', 'touchmove'].forEach(e => canvas.addEventListener(e, drag, {passive: false}));
+        ['mouseup', 'touchend'].forEach(e => canvas.addEventListener(e, endDrag));
+        window.addEventListener('resize', resizeCanvas);
+    };
+
+    // --- UNIVERSAL FILE LOADER (Handles Upload & Paste) ---
+    async function processFile(file) {
+        if (!file) return;
+
+        document.getElementById('loader').innerHTML = '<div class="spinner"></div><p style="margin-top:15px; font-weight:600;">Processing...</p>';
+        document.getElementById('loader').style.display = 'flex';
+
+        if (file.type === 'application/pdf') {
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                const page = await pdf.getPage(1);
+                
+                const viewport = page.getViewport({ scale: 2.0 });
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCanvas.height = viewport.height;
+                tempCanvas.width = viewport.width;
+
+                await page.render({ canvasContext: tempCtx, viewport: viewport }).promise;
+                imgObj.src = tempCanvas.toDataURL('image/jpeg', 0.9);
+            } catch (error) {
+                alert("PDF Error! Try an image.");
+                document.getElementById('loader').style.display = 'none';
+                return;
+            }
+        } else if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(e) { imgObj.src = e.target.result; }
+            reader.readAsDataURL(file);
+        } else {
+            alert("Only Images or PDF supported!");
+            document.getElementById('loader').style.display = 'none';
+            return;
+        }
+
+        imgObj.onload = function() {
+            document.getElementById('upload-hint').style.display = 'none';
+            document.getElementById('scanBtn').disabled = false;
+            resizeCanvas();
+            document.getElementById('loader').style.display = 'none';
+        }
+    }
+
+    // 1. Handle Regular Upload
+    function handleFileSelect(input) {
+        processFile(input.files[0]);
+    }
+
+    // 2. Handle Ctrl+V (Paste on PC)
+    document.addEventListener('paste', function(e) {
+        const items = e.clipboardData.items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+                const blob = items[i].getAsFile();
+                processFile(blob);
+                e.preventDefault(); // Default paste text behavior roko
+                break;
+            }
+        }
+    });
+
+    // 3. Handle Mobile Paste Button
+    async function handleMobilePaste() {
+        try {
+            const items = await navigator.clipboard.read();
+            for (const item of items) {
+                // Check if clipboard item is an image
+                const imageType = item.types.find(type => type.startsWith('image/'));
+                if (imageType) {
+                    const blob = await item.getType(imageType);
+                    processFile(blob);
+                    return;
+                }
+            }
+            alert("Clipboard me koi Image nahi mili!");
+        } catch (err) {
+            alert("Paste ki permission nahi mili ya Clipboard khali h.");
+        }
+    }
+
+    // NEW: VISUAL CANVAS ONLY (Matches Screen Size for Smooth Dragging)
+    function resizeCanvas() {
+        const wrap = document.querySelector('.scanner-wrapper');
+        if(wrap && canvas) {
+            canvas.width = wrap.clientWidth;
+            // Calculate height based on image aspect ratio, else default
+            if(imgObj.src && imgObj.naturalWidth > 0) {
+                const ratio = imgObj.naturalHeight / imgObj.naturalWidth;
+                canvas.height = canvas.width * ratio;
+            } else {
+                canvas.height = 250; // Default black box height
+            }
+            draw();
+        }
+    }
+
+    function draw() {
+        if(!ctx) return;
+        ctx.clearRect(0,0, canvas.width, canvas.height);
+        
+        // Draw Image Scaled to Canvas
+        if(imgObj.src) {
+            ctx.drawImage(imgObj, 0, 0, canvas.width, canvas.height);
+        }
+
+        // 1. Draw Red Boundary
+        if(!Array.isArray(corners) || corners.length !== 4) return; // Crash Prevention
+
+        ctx.beginPath(); 
+        ctx.lineWidth = 2; 
+        ctx.strokeStyle = '#ef4444';
+        ctx.moveTo(corners[0].x * canvas.width, corners[0].y * canvas.height);
+        for(let i=1; i<4; i++) ctx.lineTo(corners[i].x * canvas.width, corners[i].y * canvas.height);
+        ctx.closePath(); ctx.stroke();
+
+        // 2. Draw VISIBLE Green Dots (Overlay Logic)
+        ctx.fillStyle = '#00ff00'; 
+        const dotRadius = Math.max(2, canvas.width * 0.007); 
+
+        for (let r = 0; r < GRID_ROWS; r++) {
+            for (let c = 0; c < GRID_COLS; c++) {
+                let isRelevant = false;
+                if(r < 10 && c < 7) isRelevant = true;
+                else if(r < 10 && c >= 9 && c <= 16) isRelevant = true;
+                else if(r >= 11) {
+                    if((c>=2 && c<=6) || (c>=11 && c<=15) || (c>=20 && c<=24) || (c>=29 && c<=33)) isRelevant = true;
+                }
+
+                if (isRelevant) {
+                    // Use Visual Coordinates
+                    let pt = getGridPointVisual(r, c);
+                    ctx.beginPath(); 
+                    ctx.arc(pt.x, pt.y, dotRadius, 0, Math.PI*2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        // 3. Draw Handles
+        corners.forEach(p => {
+            ctx.beginPath(); 
+            ctx.arc(p.x*canvas.width, p.y*canvas.height, 8, 0, Math.PI*2);
+            ctx.fillStyle='#dc2626'; ctx.fill(); 
+            ctx.strokeStyle='white'; ctx.stroke();
+        });
+    }
+
+    // Helper for Visual Drawing
+    function getGridPointVisual(row, col) {
+        let u = (col) / (GRID_COLS - 1); 
+        let v = (row) / (GRID_ROWS - 1);
+        
+        let xTop = corners[0].x + (corners[1].x - corners[0].x) * u;
+        let yTop = corners[0].y + (corners[1].y - corners[0].y) * u;
+        let xBot = corners[3].x + (corners[2].x - corners[3].x) * u;
+        let yBot = corners[3].y + (corners[2].y - corners[3].y) * u;
+        
+        let x = xTop + (xBot - xTop) * v;
+        let y = yTop + (yBot - yTop) * v;
+        return { x: x * canvas.width, y: y * canvas.height };
+    }
+
+    // --- Interaction Logic ---
+    function startDrag(e) {
+        if(!imgObj.src) return;
+        if(e.cancelable) e.preventDefault();
+        
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        
+        const px = (clientX - rect.left) / rect.width;
+        const py = (clientY - rect.top) / rect.height;
+        const d = 30 / rect.width;
+        
+        activeCorner = -1;
+        corners.forEach((p, i) => { if(Math.hypot(p.x - px, p.y - py) < d) activeCorner = i; });
+    }
+
+    function drag(e) {
+        if(activeCorner === -1) return;
+        if(e.cancelable) e.preventDefault();
+        
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        const px = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+        const py = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
+        
+        corners[activeCorner] = {x:px, y:py};
+        draw(); 
+    }
+
+    function endDrag() { 
+        if(activeCorner !== -1) saveLayout();
+        activeCorner = -1; 
+    }
+
+    function saveLayout() { localStorage.setItem('omr_fixed_v4', JSON.stringify(corners)); }
+    function loadLayout() {
+        try {
+            const saved = localStorage.getItem('omr_fixed_v4');
+            if(saved) {
+                const parsed = JSON.parse(saved);
+                if(Array.isArray(parsed) && parsed.length === 4) {
+                    corners = parsed;
+                    return;
+                }
+            }
+        } catch(e) { console.log("Resetting layout"); }
+        // Default fallback if error or empty
+        corners = [{x:0.04, y:0.04}, {x:0.96, y:0.04}, {x:0.96, y:0.96}, {x:0.04, y:0.96}];
+    }
+
+    // --- HIGH ACCURACY SCANNING (Hidden Canvas) ---
+    function processScan() {
+        document.getElementById('loader').style.display = 'flex';
+        
+        setTimeout(() => {
+            // 1. Create Offline High-Res Canvas
+            const dataCanvas = document.createElement('canvas');
+            dataCanvas.width = imgObj.naturalWidth;
+            dataCanvas.height = imgObj.naturalHeight;
+            const dataCtx = dataCanvas.getContext('2d');
+            dataCtx.drawImage(imgObj, 0, 0);
+
+            // 2. Helper to get pixel data using Normalized Coords (0-1)
+            function getPixelDarkness(row, col) {
+                // Calculate position on High-Res Image
+                let u = (col) / (GRID_COLS - 1); 
+                let v = (row) / (GRID_ROWS - 1);
+                
+                let xTop = corners[0].x + (corners[1].x - corners[0].x) * u;
+                let yTop = corners[0].y + (corners[1].y - corners[0].y) * u;
+                let xBot = corners[3].x + (corners[2].x - corners[3].x) * u;
+                let yBot = corners[3].y + (corners[2].y - corners[3].y) * u;
+                
+                let rx = (xTop + (xBot - xTop) * v) * dataCanvas.width;
+                let ry = (yTop + (yBot - yTop) * v) * dataCanvas.height;
+                
+                let sx = Math.floor(rx);
+                let sy = Math.floor(ry);
+                
+                if(sx < 0 || sy < 0 || sx >= dataCanvas.width || sy >= dataCanvas.height) return 255;
+                
+                // Sample Logic (Adaptive Size)
+                let sampleSize = Math.max(1, Math.floor(dataCanvas.width * 0.004));
+                try {
+                    let p = dataCtx.getImageData(sx - Math.floor(sampleSize/2), sy - Math.floor(sampleSize/2), sampleSize, sampleSize).data;
+                    let total = 0;
+                    for(let i=0; i<p.length; i+=4) total += (p[i]*0.3 + p[i+1]*0.59 + p[i+2]*0.11);
+                    return total/(p.length/4);
+                } catch(e) { return 255; }
+            }
+
+            // 3. Scan Roll
+            detectedRoll = "";
+            const digitMap = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+            for(let c=0; c<=6; c++) {
+                let minV = 255, digit = "?";
+                for(let r=0; r<=9; r++) {
+                    let val = getPixelDarkness(r, c);
+                    if(val < minV) { minV = val; if(val < 155) digit = digitMap[r]; }
+                }
+                detectedRoll += digit;
+            }
+
+            // 4. Scan Booklet (Fixed)
+            detectedBooklet = "";
+            for(let c=9; c<=16; c++) {
+                let minV = 255, digit = "?";
+                for(let r=0; r<=9; r++) {
+                    let val = getPixelDarkness(r, c);
+                    if(val < minV) { minV = val; if(val < 155) digit = digitMap[r]; }
+                }
+                detectedBooklet += digit;
+            }
+            // NEW: Remove trailing '?' if last columns are empty
+            detectedBooklet = detectedBooklet.replace(/\?+$/, '');
+
+            // 5. Scan Answers
+            detectedAnswers.fill(null);
+            const blocks = [{c:2,o:0}, {c:11,o:30}, {c:20,o:60}, {c:29,o:90}];
+            blocks.forEach(b => {
+                for(let r=0; r<30; r++) {
+                    let qIdx = b.o + r;
+                    let gridRow = 11 + r;
+                    let best = null, minV = 255;
+                    for(let opt=0; opt<5; opt++) {
+                        let val = getPixelDarkness(gridRow, b.c + opt);
+                        if(val < minV) { minV = val; if(val < 145) best = optionsList[opt]; }
+                    }
+                    detectedAnswers[qIdx] = best;
+                }
+            });
+
+            calculateResult();
+            
+            document.getElementById('loader').style.display = 'none';
+            const resCard = document.getElementById('result-card');
+            resCard.style.display = 'block';
+            resCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        }, 200);
+    }
+
+    function calculateResult() {
+        document.getElementById('res-roll').innerText = detectedRoll;
+        document.getElementById('res-booklet').innerText = detectedBooklet;
+
+        let rollNum = parseInt(detectedRoll.replace(/\D/g, ''));
+        let foundShift = SHIFT_RANGES.find(s => rollNum >= s.min && rollNum <= s.max);
+        let currentShiftId = null;
+        
+        if(foundShift) {
+            currentShiftId = foundShift.id;
+            document.getElementById('res-shift').innerText = foundShift.label;
+            document.getElementById('res-shift').style.background = '#dcfce7';
+            document.getElementById('res-shift').style.color = '#166534';
+        } else {
+            document.getElementById('res-shift').innerText = "Check Roll No";
+            document.getElementById('res-shift').style.background = '#fee2e2';
+            document.getElementById('res-shift').style.color = '#991b1b';
+            return;
+        }
+
+        if(typeof allShiftData !== 'undefined') {
+            const sData = allShiftData[currentShiftId];
+            autoCalculateBestSet(sData);
+        }
+    }
+
+   function autoCalculateBestSet(sData) {
+        const validQ = sData.questions.length - sData.questions.filter(q => q.deleted).length;
+        // Prevent division by zero if all deleted (rare case)
+        const marksPerQ = validQ > 0 ? (200 / validQ) : 0;
+        const negMark = marksPerQ / 3;
+
+        let bestScore = -Infinity, bestSet = "", bestStats = {};
+
+        Object.keys(sData.seriesOrder).forEach(setCode => {
+            let stats = getScore(setCode, sData, marksPerQ, negMark);
+            if(stats.score > bestScore) {
+                bestScore = stats.score;
+                bestSet = setCode;
+                bestStats = stats;
+            }
+        });
+
+        // UI Update Stats
+        document.getElementById('detected-set').innerText = bestSet;
+        document.getElementById('res-score').innerText = bestScore.toFixed(4);
+        document.getElementById('res-correct').innerText = bestStats.c;
+        document.getElementById('res-wrong').innerText = bestStats.w;
+        document.getElementById('res-skip').innerText = bestStats.s;
+        
+        // NEW: Show Deleted Count
+        document.getElementById('res-deleted').innerText = bestStats.d;
+        
+        // GRID GENERATION (Modified for Deleted Logic)
+        const gridDiv = document.getElementById('detected-grid');
+        gridDiv.innerHTML = '';
+        
+        const qOrder = sData.seriesOrder[bestSet]; // Get Mapping for best set
+
+        detectedAnswers.forEach((ans, i) => {
+            let d = document.createElement('div');
+            let className = 'd-cell ' + (ans ? 'filled' : '');
+            
+            // Check if this question is DELETED
+            if (qOrder && qOrder[i]) {
+                const masterIdx = qOrder[i];
+                const masterQ = sData.questions[masterIdx - 1];
+                if (masterQ && masterQ.deleted) {
+                    className += ' deleted'; // Add faded style
+                }
+            }
+
+            d.className = className;
+            d.innerText = (i+1) + (ans ? ':' + ans : '');
+            gridDiv.appendChild(d);
+        });
+        document.getElementById('preview-grid-wrapper').style.display = 'block';
+    }
+
+   function getScore(setCode, sData, marksPerQ, negMark) {
+        let c = 0, w = 0, s = 0, d = 0; // Added 'd' for deleted
+        const qOrder = sData.seriesOrder[setCode];
+        const optConfig = sData.seriesOptionOrder ? sData.seriesOptionOrder[setCode] : null;
+
+        qOrder.forEach((masterIdx, userIdx) => {
+            if (userIdx >= detectedAnswers.length) return;
+            const masterQ = sData.questions[masterIdx - 1];
+            
+            // NEW: Count Deleted Questions
+            if (masterQ.deleted) { 
+                d++; 
+                return; 
+            }
+
+            const userAns = detectedAnswers[userIdx];
+            if (!userAns || userAns === 'E') { s++; return; }
+
+            let pattern = [0, 1, 2, 3, 4];
+            if (optConfig) {
+                if (Array.isArray(optConfig)) pattern = optConfig;
+                else pattern = optConfig[masterQ.id] || optConfig['default'] || pattern;
+            }
+
+            const visualIdx = optionsList.indexOf(userAns);
+            const masterOptIdx = pattern[visualIdx];
+            if (!masterQ.options[masterOptIdx]) { w++; return; }
+
+            const selText = masterQ.options[masterOptIdx].substring(3).trim();
+            const corText = masterQ.answer.substring(3).trim();
+
+            if (selText === corText) c++; else w++;
+        });
+
+        return { score: (c * marksPerQ) - (w * negMark), c, w, s, d };
+    }
+
+ function triggerPrint() {
+        const d = new Date();
+        document.getElementById('p-date').innerText = d.toLocaleDateString();
+        
+        // Basic Info
+        document.getElementById('p-roll').innerText = document.getElementById('res-roll').innerText;
+        document.getElementById('p-booklet').innerText = document.getElementById('res-booklet').innerText;
+        document.getElementById('p-shift').innerText = document.getElementById('res-shift').innerText;
+        document.getElementById('p-set').innerText = document.getElementById('detected-set').innerText;
+        
+        // Scores (Added Skip)
+        document.getElementById('p-score').innerText = document.getElementById('res-score').innerText;
+        document.getElementById('p-correct').innerText = document.getElementById('res-correct').innerText;
+        document.getElementById('p-wrong').innerText = document.getElementById('res-wrong').innerText;
+   			// NEW: Update Deleted Count in Print
+        document.getElementById('p-deleted').innerText = document.getElementById('res-deleted').innerText;
+        
+        // NEW: Update Skip Count in Print
+        document.getElementById('p-skip').innerText = document.getElementById('res-skip').innerText;
+        
+        // Clean Image Logic
+        if(imgObj.src) {
+             document.getElementById('print-omr-img').src = imgObj.src;
+        }
+        
+        setTimeout(() => window.print(), 500);
+    }
+</script>
+  <script>
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');
+</script>
+</body>
+</html>
