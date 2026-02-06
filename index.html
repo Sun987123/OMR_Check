@@ -165,6 +165,24 @@
                 grid-template-columns: 1fr auto 1fr; 
             }
         }
+
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            z-index: 2000; display: none; justify-content: center; align-items: center;
+        }
+        .modal-box {
+            background: white; padding: 25px; border-radius: 12px;
+            width: 90%; max-width: 350px; text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        .modal-box h3 { margin: 0 0 10px; color: #dc2626; }
+        .modal-box input {
+            width: 100%; padding: 12px; font-size: 1.2rem;
+            text-align: center; border: 2px solid #cbd5e1;
+            border-radius: 8px; margin: 15px 0; letter-spacing: 2px;
+            font-weight: bold;
+        }
+        .modal-box input:focus { border-color: var(--primary); outline: none; }
     </style>
 </head>
 <body>
@@ -299,7 +317,16 @@
     <div class="spinner"></div>
     <p style="margin-top:15px; font-weight:600; color:#475569;">Scanning (High Quality)...</p>
 </div>
-
+<div class="modal-overlay" id="manualRollModal">
+    <div class="modal-box">
+        <h3><i class="fas fa-exclamation-triangle"></i> Roll No. Error</h3>
+        <p style="font-size:0.9rem; color:#64748b;">Roll Number clear nahi hai. Kripya sahi Roll No. enter karein:</p>
+        <input type="text" id="manualRollInput" placeholder="Enter Roll Number">
+        <button class="btn btn-primary" onclick="submitManualRoll()">
+            Result Process Karein <i class="fas fa-arrow-right"></i>
+        </button>
+    </div>
+</div>
 <script src="questions-data.js"></script>
 
 <script>
@@ -613,18 +640,27 @@
                         let val = getPixelDarkness(gridRow, b.c + opt);
                         if(val < minV) { minV = val; if(val < 145) best = optionsList[opt]; }
                     }
-                    detectedAnswers[qIdx] = best;
-                }
-            });
+                   detectedAnswers[qIdx] = best;
+        }
+    });
 
-            calculateResult();
-            
-            document.getElementById('loader').style.display = 'none';
-            const resCard = document.getElementById('result-card');
-            resCard.style.display = 'block';
-            resCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // --- NEW LOGIC: Check for Question Mark ---
+    if (detectedRoll.includes('?')) {
+        document.getElementById('loader').style.display = 'none'; // Loader hatao
+        document.getElementById('manualRollInput').value = detectedRoll; // Jo scan hua wo dikhao
+        document.getElementById('manualRollModal').style.display = 'flex'; // Popup dikhao
+        return; // Yahi ruk jao, aage mat badho
+    }
+    // ------------------------------------------
 
-        }, 200);
+    calculateResult();
+    
+    document.getElementById('loader').style.display = 'none';
+    const resCard = document.getElementById('result-card');
+    resCard.style.display = 'block';
+    resCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+}, 200);
     }
 
     function calculateResult() {
@@ -737,7 +773,24 @@
 
         return { score: (c * marksPerQ) - (w * negMark), c, w, s, d };
     }
+function submitManualRoll() {
+        const val = document.getElementById('manualRollInput').value.trim();
+        if(!val || val.length < 5) {
+            alert("Please enter a valid Roll Number!");
+            return;
+        }
 
+        detectedRoll = val;
+
+        document.getElementById('manualRollModal').style.display = 'none';
+
+        calculateResult();
+        
+        const resCard = document.getElementById('result-card');
+        resCard.style.display = 'block';
+        resCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  
 function triggerPrint() {
 
         document.getElementById('p-roll').innerText = document.getElementById('res-roll').innerText;
