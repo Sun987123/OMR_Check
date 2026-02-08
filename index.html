@@ -1,16 +1,21 @@
 <!DOCTYPE html>
 <html lang="hi">
-<head> 
-  	<link rel="manifest" href="manifest.json">
-		<meta name="theme-color" content="#1e1e2e">
+<head>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e1e2e">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OMR Check</title>
+    <title>OMR Master Scanner (Pro)</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  	<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <style>
         :root { 
@@ -54,7 +59,8 @@
         .btn-primary { background: var(--primary); color: white; }
         .btn-primary:disabled { background: #94a3b8; }
         .btn-outline { background: transparent; border: 2px solid #cbd5e1; color: #475569; }
-
+        
+        /* SCANNER WRAPPER */
         .scanner-wrapper { 
             position: relative; 
             width: 100%; 
@@ -64,29 +70,19 @@
             overflow: hidden; 
             margin-bottom: 12px;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
-
             display: block; 
         }
-
-        canvas { 
-            display: block; 
-            width: 100%; 
-            height: auto; 
-        }
+        
+        canvas { display: block; width: 100%; height: auto; }
 
         #upload-hint {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            color: white;
-            pointer-events: none; 
-            z-index: 10;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            text-align: center; color: white; pointer-events: none; z-index: 10;
         }
         
         .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
+        /* RESULT STYLES */
         .result-box { display: none; animation: slideUp 0.5s ease-out; margin-top: 20px; border: 2px solid var(--primary); }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
@@ -105,7 +101,7 @@
         .st-num { font-size: 1.3rem; font-weight: 800; display: block; }
         .st-lbl { font-size: 0.7rem; color: #64748b; font-weight: 700; text-transform: uppercase; }
         
-        .c-green { color: var(--success); } .c-red { color: var(--danger); } .c-yellow { color: #d97706; }
+        .c-green { color: var(--success); } .c-red { color: var(--danger); } .c-yellow { color: #d97706; } .c-gray { color: #64748b; }
 
         .detected-grid { 
             display: grid; grid-template-columns: repeat(auto-fill, minmax(35px, 1fr)); gap: 5px; 
@@ -114,15 +110,7 @@
         }
         .d-cell { font-size: 10px; text-align: center; padding: 6px 0; background: #f1f5f9; border-radius: 4px; cursor: pointer; color: #475569; font-weight: 600; }
         .d-cell.filled { background: var(--primary); color: white; }
-
-        .d-cell.deleted { 
-            opacity: 0.5; 
-            background: #94a3b8 !important; 
-            color: #fff; 
-            text-decoration: line-through; 
-            border: 1px dashed #475569;
-        }
-        .c-gray { color: #64748b; }
+        .d-cell.deleted { opacity: 0.5; background: #94a3b8 !important; color: #fff; text-decoration: line-through; border: 1px dashed #475569; }
 
         .helper-text { 
             font-size: 0.85rem; color: #334155; margin-bottom: 10px; 
@@ -135,57 +123,60 @@
         .spinner { width: 45px; height: 45px; border: 5px solid #e2e8f0; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* --- LOGIN & ONLINE DATA CSS --- */
+        .login-overlay {
+            position: fixed; inset: 0; background: #f1f5f9; z-index: 9999;
+            display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .login-card {
+            background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 350px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; border: 1px solid #cbd5e1;
+        }
+        .login-inp {
+            width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #e2e8f0;
+            border-radius: 8px; background: #f8fafc; outline: none;
+        }
+        .online-box {
+            background: #eff6ff; border: 1px dashed #3b82f6; border-radius: 8px;
+            padding: 10px; margin-bottom: 15px; display: none; text-align: left;
+        }
+        .ob-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.85rem; }
+        .ob-lbl { font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        .ob-val { font-weight: 700; color: #0f172a; }
+
         @media print {
             @page { margin: 1cm; size: A4; }
             body { background: white; margin: 0; padding: 0; -webkit-print-color-adjust: exact; }
-            .container, .card, .btn, .loading { display: none !important; }
+            .container, .card, .btn, .loading, .login-overlay { display: none !important; }
             
             #print-container { 
                 display: block !important; 
-                width: 100%; 
-                height: auto; 
-                padding: 10px;
-                box-sizing: border-box;
+                width: 100%; height: auto; padding: 10px; box-sizing: border-box;
             }
-
         }
         #print-container { display: none; }
-     
+
         @media (max-width: 768px) {
             .mobile-paste-btn {
-                display: flex !important; 
-                align-items: center;
-                justify-content: center;
-                background: #fff;
-                color: var(--primary);
-                border-color: var(--primary);
+                display: flex !important; align-items: center; justify-content: center;
+                background: #fff; color: var(--primary); border-color: var(--primary);
             }
-
-            .controls {
-                grid-template-columns: 1fr auto 1fr; 
-            }
+            .controls { grid-template-columns: 1fr auto 1fr; }
         }
-
-        .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
-            z-index: 2000; display: none; justify-content: center; align-items: center;
-        }
-        .modal-box {
-            background: white; padding: 25px; border-radius: 12px;
-            width: 90%; max-width: 350px; text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-        }
-        .modal-box h3 { margin: 0 0 10px; color: #dc2626; }
-        .modal-box input {
-            width: 100%; padding: 12px; font-size: 1.2rem;
-            text-align: center; border: 2px solid #cbd5e1;
-            border-radius: 8px; margin: 15px 0; letter-spacing: 2px;
-            font-weight: bold;
-        }
-        .modal-box input:focus { border-color: var(--primary); outline: none; }
     </style>
 </head>
 <body>
+
+<div id="authScreen" class="login-overlay">
+    <div class="login-card">
+        <h2 style="justify-content:center; color:#2563eb; margin-top:0;">SECURE LOGIN</h2>
+        <p style="font-size:0.85rem; color:#64748b; margin-bottom:20px;">Enter credentials to access OMR Data</p>
+        <input type="email" id="uEmail" class="login-inp" placeholder="Admin Email">
+        <input type="password" id="uPass" class="login-inp" placeholder="Password">
+        <button class="btn btn-primary" onclick="adminLogin()">UNLOCK SYSTEM</button>
+        <p id="lMsg" style="color:red; font-size:0.8rem; margin-top:10px; display:none;"></p>
+    </div>
+</div>
 
 <div class="container">
     <div class="card" id="scanner-card">
@@ -208,7 +199,7 @@
             <button class="btn btn-outline" onclick="document.getElementById('fileIn').click()">
                 <i class="fas fa-upload"></i> Re-Upload
             </button>
-          	<button class="btn btn-outline mobile-paste-btn" onclick="handleMobilePaste()" style="display:none; width: auto; padding: 12px 15px;">
+            <button class="btn btn-outline mobile-paste-btn" onclick="handleMobilePaste()" style="display:none; width: auto; padding: 12px 15px;">
                 <i class="fas fa-paste"></i>
             </button>
             <input type="file" id="fileIn" accept="image/*,application/pdf" style="display:none" onchange="handleFileSelect(this)">
@@ -220,6 +211,34 @@
     </div>
 
     <div class="card result-box" id="result-card">
+        
+        <div id="onlineDataBox" class="online-box">
+            <div style="border-bottom:1px solid #bfdbfe; padding-bottom:5px; margin-bottom:5px; font-weight:800; color:#1e40af; font-size:0.8rem; display:flex; justify-content:space-between;">
+                <span>SERVER DATA (4TH GRADE)</span>
+                <span id="on-status" style="color:#d97706;">SEARCHING...</span>
+            </div>
+            <div class="ob-grid">
+                <div><div class="ob-lbl">Candidate Name</div><div class="ob-val" id="on-name">--</div></div>
+                <div><div class="ob-lbl">Rank / Merit</div><div class="ob-val" id="on-rank" style="color:#9333ea;">--</div></div>
+                
+                <div><div class="ob-lbl">Father's Name</div><div class="ob-val" id="on-father">--</div></div>
+                <div><div class="ob-lbl">Mother's Name</div><div class="ob-val" id="on-mother">--</div></div>
+                
+                <div><div class="ob-lbl">Category</div><div class="ob-val" id="on-cat">--</div></div>
+                <div><div class="ob-lbl">Gender</div><div class="ob-val" id="on-gender">--</div></div>
+            </div>
+            <div style="margin-top:8px; padding-top:5px; border-top:1px dashed #bfdbfe; display:flex; justify-content:space-between; font-size:0.85rem;">
+                <div style="display:flex; flex-direction:column;">
+                    <span class="ob-lbl">Server Raw</span>
+                    <span id="on-raw" style="font-weight:800; color:#2563eb;">--</span>
+                </div>
+                <div style="display:flex; flex-direction:column; text-align:right;">
+                    <span class="ob-lbl">Server Final</span>
+                    <span id="on-final" style="font-weight:800; color:#16a34a;">--</span>
+                </div>
+            </div>
+        </div>
+
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <div style="font-size:0.9rem; font-weight:700; color:#c2410c;">SET: <span id="detected-set">--</span></div>
             <button class="btn btn-outline" style="width:auto; padding:5px 10px; font-size:0.8rem;" onclick="location.reload()">
@@ -229,7 +248,7 @@
 
         <div class="result-header">
             <div class="score-val" id="res-score">0.00</div>
-            <div style="font-size:0.8rem; opacity:0.9;">Total RAW Score (Out of 200)</div>
+            <div style="font-size:0.8rem; opacity:0.9;">OMR Scan Score (Raw)</div>
             
             <div class="meta-info">
                 <div>Roll: <b id="res-roll">--</b></div>
@@ -268,18 +287,38 @@
 </div>
 
 <div id="print-container">
-    <div class="print-header" style="text-align: center; margin-bottom: 20px;">
-    <div class="ph-title" style="font-size: 24px; font-weight: 900; text-transform: uppercase; color: #1e40af;">Result Report 4th Class</div>
-   <div style="font-size:12px; color:#555;">
-        OMR Auto-Evaluation by MP SALODIYA
+    <div class="print-header" style="text-align: center; margin-bottom: 10px;">
+        <div class="ph-title" style="font-size: 24px; font-weight: 900; text-transform: uppercase; color: #1e40af;">Result Report 4th Class</div>
+        <div style="font-size:12px; color:#555;"> Dream_Link OMR Auto-Evaluation | Date: <span id="p-date"></span></div>
     </div>
-</div>
+
+    <div id="print-extra-info" style="display:none; margin-bottom:15px; border:1px solid #1e293b; border-radius:8px; padding:10px; font-size:12px; text-align:left; background:#f8fafc;">
+        <div style="border-bottom:1px dashed #cbd5e1; padding-bottom:5px; margin-bottom:5px; font-weight:bold; color:#1e40af;">SERVER RECORD DETAILS</div>
+        <table style="width:100%; border-collapse:collapse;">
+            <tr>
+                <td style="padding:4px; width:50%;"><b>Name:</b> <span id="p-on-name"></span></td>
+                <td style="padding:4px; width:50%; color:#9333ea;"><b>Rank:</b> <span id="p-on-rank" style="font-weight:900;"></span></td>
+            </tr>
+            <tr>
+                <td style="padding:4px;"><b>Father:</b> <span id="p-on-father"></span></td>
+                <td style="padding:4px;"><b>Mother:</b> <span id="p-on-mother"></span></td>
+            </tr>
+            <tr>
+                <td style="padding:4px;"><b>Category:</b> <span id="p-on-cat"></span></td>
+                <td style="padding:4px;">
+                    <b>Raw:</b> <span id="p-on-raw"></span> | 
+                    <b>Final:</b> <span id="p-on-final"></span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
     <div class="print-score" style="display: flex; flex-direction: column; gap: 15px; background: #f3f4f6 !important; border: 2px solid #1e40af; border-radius: 12px; padding: 15px; margin-bottom: 20px;">
         
         <div style="display: flex; justify-content: space-around; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
             <div style="text-align:center;">
                 <span class="ps-val" id="p-score" style="font-size: 28px; font-weight: 800; color: #1e40af;">0.00</span>
-                <span class="ps-lbl" style="font-size: 10px; text-transform: uppercase; font-weight: bold;">Total RAW Score</span>
+                <span class="ps-lbl" style="font-size: 10px; text-transform: uppercase; font-weight: bold;">OMR RAW Score</span>
             </div>
             <div style="text-align:center; color:#16a34a;">
                 <span class="ps-val" id="p-correct" style="font-size: 24px; font-weight: 800;">0</span>
@@ -289,11 +328,11 @@
                 <span class="ps-val" id="p-wrong" style="font-size: 24px; font-weight: 800;">0</span>
                 <span class="ps-lbl" style="font-size: 10px; text-transform: uppercase; font-weight: bold;">Wrong</span>
             </div>
-          	<div style="text-align:center; color:#d97706;">
+            <div style="text-align:center; color:#d97706;">
                 <span class="ps-val" id="p-skip" style="font-size: 24px; font-weight: 800;">0</span>
                 <span class="ps-lbl" style="font-size: 10px; text-transform: uppercase; font-weight: bold;">Skip</span>
             </div>
-          	<div style="text-align:center; color:#64748b;">
+            <div style="text-align:center; color:#64748b;">
                 <span class="ps-val" id="p-deleted" style="font-size: 24px; font-weight: 800;">0</span>
                 <span class="ps-lbl" style="font-size: 10px; text-transform: uppercase; font-weight: bold;">Deleted</span>
             </div>
@@ -308,28 +347,144 @@
     </div>
 
     <div style="font-size:10px; font-weight:bold; margin-bottom:5px; border-bottom:1px solid #ccc;">Clean OMR Scan Proof:</div>
-    <div class="print-omr-wrapper" style="text-align: center; width: 100%; max-height: 20cm; overflow: hidden; border: 1px solid #ddd; display: flex; justify-content: center;">
+    <div class="print-omr-wrapper" style="text-align: center; width: 100%; max-height: 18cm; overflow: hidden; border: 1px solid #ddd; display: flex; justify-content: center;">
         <img id="print-omr-img" class="print-omr" alt="OMR Scan" style="max-width: 100%; max-height: 100%; object-fit: contain;">
     </div>
     <div class="print-footer" style="position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; font-size: 10px; color: #888; background: #fff; padding: 5px;">Generated by MP SALODIYA</div>
 </div>
+
 <div class="loading" id="loader">
     <div class="spinner"></div>
     <p style="margin-top:15px; font-weight:600; color:#475569;">Scanning (High Quality)...</p>
 </div>
-<div class="modal-overlay" id="manualRollModal">
-    <div class="modal-box">
-        <h3><i class="fas fa-exclamation-triangle"></i> Roll No. Error</h3>
-        <p style="font-size:0.9rem; color:#64748b;">Roll Number clear nahi hai. Kripya sahi Roll No. enter karein:</p>
-        <input type="text" id="manualRollInput" placeholder="Enter Roll Number">
-        <button class="btn btn-primary" onclick="submitManualRoll()">
-            Result Process Karein <i class="fas fa-arrow-right"></i>
-        </button>
-    </div>
-</div>
+
 <script src="questions-data.js"></script>
 
 <script>
+    // --- FIREBASE CONFIGURATION ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyAiLtCapS9zH6JMA_S3EpRm84kR90IUALI",
+        authDomain: "examdata.firebaseapp.com",
+        databaseURL: "https://examdata-default-rtdb.firebaseio.com",
+        projectId: "examdata",
+        storageBucket: "examdata.firebasestorage.app",
+        messagingSenderId: "658962316072",
+        appId: "1:658962316072:web:9b78511acbe17f97a6ee1d"
+    };
+
+    let db, auth;
+
+    // 1. Initialize Firebase
+    function initSystem() {
+        if (typeof firebase === 'undefined') {
+            console.error("Firebase script not loaded! Check Internet.");
+            return;
+        }
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        
+        db = firebase.database();
+        auth = firebase.auth();
+        
+        auth.onAuthStateChanged(user => {
+            const screen = document.getElementById('authScreen');
+            if(screen) screen.style.display = user ? 'none' : 'flex';
+        });
+    }
+
+    // 2. Login Function
+    function adminLogin() {
+        if (!auth) initSystem(); // Safety Check
+
+        const e = document.getElementById('uEmail').value;
+        const p = document.getElementById('uPass').value;
+        const m = document.getElementById('lMsg');
+        
+        if(!e || !p) { m.innerText="Details required!"; m.style.display='block'; return; }
+        m.style.display='none';
+        
+        if(auth) {
+            auth.signInWithEmailAndPassword(e, p).catch(err => {
+                m.innerText = "Wrong Credentials / Network Error";
+                m.style.display='block';
+            });
+        } else {
+            m.innerText = "System Initializing... Click again!";
+            m.style.display='block';
+            initSystem(); // Retry init
+        }
+    }
+
+    // 3. Fetch Data (With Mother Name & Rank)
+    async function getStudentData(roll) {
+        if(!roll || !db) return;
+        
+        const box = document.getElementById('onlineDataBox');
+        const status = document.getElementById('on-status');
+        const printBox = document.getElementById('print-extra-info');
+        
+        box.style.display = 'block';
+        status.innerText = "SEARCHING...";
+        status.style.color = "#d97706";
+        
+        // Reset Fields
+        const fields = ['on-name','on-rank','on-father','on-mother','on-cat','on-gender','on-raw','on-final'];
+        fields.forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.innerText = '--';
+        });
+
+        try {
+            const snap = await db.ref('exams/fourthgrade2025/byroll/' + roll).once('value');
+            
+            if(snap.exists()) {
+                const d = snap.val();
+                
+                // Set Values
+                document.getElementById('on-name').innerText = d.candidate || '-';
+                document.getElementById('on-father').innerText = d.father || '-';
+                document.getElementById('on-mother').innerText = d.mother || '-';
+                document.getElementById('on-cat').innerText = d.category || '-';
+                document.getElementById('on-gender').innerText = d.gender || '-';
+                
+                // Rank Logic
+                let rankVal = d.merit ? `#${d.merit}` : (d.rank ? `#${d.rank}` : 'NA');
+                document.getElementById('on-rank').innerText = rankVal;
+
+                // Marks Logic
+                let rawScore = d.raw ? parseFloat(d.raw).toFixed(4) : 'NA';
+                let finalScore = (d.normalized || d.raw || 0);
+                let finalScoreFmt = parseFloat(finalScore).toFixed(4);
+
+                document.getElementById('on-raw').innerText = rawScore;
+                document.getElementById('on-final').innerText = finalScoreFmt;
+                
+                status.innerText = "FOUND ✔";
+                status.style.color = "#16a34a";
+
+                // PRINT DATA UPDATE
+                printBox.style.display = 'block';
+                document.getElementById('p-on-name').innerText = d.candidate || '-';
+                document.getElementById('p-on-rank').innerText = rankVal;
+                document.getElementById('p-on-father').innerText = d.father || '-';
+                document.getElementById('p-on-mother').innerText = d.mother || '-';
+                document.getElementById('p-on-cat').innerText = d.category || '-';
+                document.getElementById('p-on-raw').innerText = rawScore;
+                document.getElementById('p-on-final').innerText = finalScoreFmt;
+
+            } else {
+                status.innerText = "NOT FOUND ✘";
+                status.style.color = "#dc2626";
+                printBox.style.display = 'none';
+            }
+        } catch(err) {
+            console.error(err);
+            status.innerText = "SERVER ERROR";
+        }
+    }
+
+    // --- OMR LOGIC ---
     const GRID_ROWS = 41;
     const GRID_COLS = 37;
 
@@ -352,6 +507,14 @@
     const optionsList = ['A', 'B', 'C', 'D', 'E'];
 
     window.onload = function() {
+        initSystem(); // Init Firebase immediately
+        
+        // Data File Check
+        if (typeof allShiftData === 'undefined') {
+            console.error("questions-data.js MISSING");
+            alert("⚠️ ERROR: 'questions-data.js' file is MISSING in this folder!\nOMR Marks calculate nahi honge.");
+        }
+
         canvas = document.getElementById('omrCanvas');
         ctx = canvas.getContext('2d');
         loadLayout();
@@ -365,7 +528,6 @@
     async function processFile(file) {
         if (!file) return;
 
-        document.getElementById('loader').innerHTML = '<div class="spinner"></div><p style="margin-top:15px; font-weight:600;">Processing...</p>';
         document.getElementById('loader').style.display = 'flex';
 
         if (file.type === 'application/pdf') {
@@ -383,7 +545,7 @@
                 await page.render({ canvasContext: tempCtx, viewport: viewport }).promise;
                 imgObj.src = tempCanvas.toDataURL('image/jpeg', 0.9);
             } catch (error) {
-                alert("PDF Error! Try an image.");
+                alert("PDF Error");
                 document.getElementById('loader').style.display = 'none';
                 return;
             }
@@ -392,7 +554,7 @@
             reader.onload = function(e) { imgObj.src = e.target.result; }
             reader.readAsDataURL(file);
         } else {
-            alert("Only Images or PDF supported!");
+            alert("Images Only!");
             document.getElementById('loader').style.display = 'none';
             return;
         }
@@ -405,9 +567,7 @@
         }
     }
 
-    function handleFileSelect(input) {
-        processFile(input.files[0]);
-    }
+    function handleFileSelect(input) { processFile(input.files[0]); }
 
     document.addEventListener('paste', function(e) {
         const items = e.clipboardData.items;
@@ -415,7 +575,7 @@
             if (items[i].type.indexOf('image') !== -1) {
                 const blob = items[i].getAsFile();
                 processFile(blob);
-                e.preventDefault();
+                e.preventDefault(); 
                 break;
             }
         }
@@ -425,7 +585,6 @@
         try {
             const items = await navigator.clipboard.read();
             for (const item of items) {
-                // Check if clipboard item is an image
                 const imageType = item.types.find(type => type.startsWith('image/'));
                 if (imageType) {
                     const blob = await item.getType(imageType);
@@ -433,17 +592,13 @@
                     return;
                 }
             }
-            alert("Clipboard me koi Image nahi mili!");
-        } catch (err) {
-            alert("Paste ki permission nahi mili ya Clipboard khali h.");
-        }
+        } catch (err) {}
     }
 
     function resizeCanvas() {
         const wrap = document.querySelector('.scanner-wrapper');
         if(wrap && canvas) {
             canvas.width = wrap.clientWidth;
-
             if(imgObj.src && imgObj.naturalWidth > 0) {
                 const ratio = imgObj.naturalHeight / imgObj.naturalWidth;
                 canvas.height = canvas.width * ratio;
@@ -457,23 +612,16 @@
     function draw() {
         if(!ctx) return;
         ctx.clearRect(0,0, canvas.width, canvas.height);
+        if(imgObj.src) ctx.drawImage(imgObj, 0, 0, canvas.width, canvas.height);
 
-        if(imgObj.src) {
-            ctx.drawImage(imgObj, 0, 0, canvas.width, canvas.height);
-        }
-
-        if(!Array.isArray(corners) || corners.length !== 4) return; // Crash Prevention
-
-        ctx.beginPath(); 
-        ctx.lineWidth = 2; 
-        ctx.strokeStyle = '#ef4444';
+        if(!Array.isArray(corners) || corners.length !== 4) return;
+        ctx.beginPath(); ctx.lineWidth = 2; ctx.strokeStyle = '#ef4444';
         ctx.moveTo(corners[0].x * canvas.width, corners[0].y * canvas.height);
         for(let i=1; i<4; i++) ctx.lineTo(corners[i].x * canvas.width, corners[i].y * canvas.height);
         ctx.closePath(); ctx.stroke();
 
         ctx.fillStyle = '#00ff00'; 
         const dotRadius = Math.max(2, canvas.width * 0.007); 
-
         for (let r = 0; r < GRID_ROWS; r++) {
             for (let c = 0; c < GRID_COLS; c++) {
                 let isRelevant = false;
@@ -482,52 +630,39 @@
                 else if(r >= 11) {
                     if((c>=2 && c<=6) || (c>=11 && c<=15) || (c>=20 && c<=24) || (c>=29 && c<=33)) isRelevant = true;
                 }
-
                 if (isRelevant) {
-
                     let pt = getGridPointVisual(r, c);
-                    ctx.beginPath(); 
-                    ctx.arc(pt.x, pt.y, dotRadius, 0, Math.PI*2);
-                    ctx.fill();
+                    ctx.beginPath(); ctx.arc(pt.x, pt.y, dotRadius, 0, Math.PI*2); ctx.fill();
                 }
             }
         }
-
         corners.forEach(p => {
-            ctx.beginPath(); 
-            ctx.arc(p.x*canvas.width, p.y*canvas.height, 8, 0, Math.PI*2);
-            ctx.fillStyle='#dc2626'; ctx.fill(); 
-            ctx.strokeStyle='white'; ctx.stroke();
+            ctx.beginPath(); ctx.arc(p.x*canvas.width, p.y*canvas.height, 8, 0, Math.PI*2);
+            ctx.fillStyle='#dc2626'; ctx.fill(); ctx.strokeStyle='white'; ctx.stroke();
         });
     }
 
     function getGridPointVisual(row, col) {
         let u = (col) / (GRID_COLS - 1); 
         let v = (row) / (GRID_ROWS - 1);
-        
         let xTop = corners[0].x + (corners[1].x - corners[0].x) * u;
         let yTop = corners[0].y + (corners[1].y - corners[0].y) * u;
         let xBot = corners[3].x + (corners[2].x - corners[3].x) * u;
         let yBot = corners[3].y + (corners[2].y - corners[3].y) * u;
-        
         let x = xTop + (xBot - xTop) * v;
         let y = yTop + (yBot - yTop) * v;
         return { x: x * canvas.width, y: y * canvas.height };
     }
 
-    // --- Interaction Logic ---
     function startDrag(e) {
         if(!imgObj.src) return;
         if(e.cancelable) e.preventDefault();
-        
         const rect = canvas.getBoundingClientRect();
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        
         const px = (clientX - rect.left) / rect.width;
         const py = (clientY - rect.top) / rect.height;
         const d = 30 / rect.width;
-        
         activeCorner = -1;
         corners.forEach((p, i) => { if(Math.hypot(p.x - px, p.y - py) < d) activeCorner = i; });
     }
@@ -535,44 +670,30 @@
     function drag(e) {
         if(activeCorner === -1) return;
         if(e.cancelable) e.preventDefault();
-        
         const rect = canvas.getBoundingClientRect();
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
         const px = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
         const py = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
-        
         corners[activeCorner] = {x:px, y:py};
         draw(); 
     }
 
     function endDrag() { 
-        if(activeCorner !== -1) saveLayout();
+        if(activeCorner !== -1) localStorage.setItem('omr_fixed_v4', JSON.stringify(corners));
         activeCorner = -1; 
     }
-
-    function saveLayout() { localStorage.setItem('omr_fixed_v4', JSON.stringify(corners)); }
     function loadLayout() {
         try {
             const saved = localStorage.getItem('omr_fixed_v4');
-            if(saved) {
-                const parsed = JSON.parse(saved);
-                if(Array.isArray(parsed) && parsed.length === 4) {
-                    corners = parsed;
-                    return;
-                }
-            }
-        } catch(e) { console.log("Resetting layout"); }
-
-        corners = [{x:0.04, y:0.04}, {x:0.96, y:0.04}, {x:0.96, y:0.96}, {x:0.04, y:0.96}];
+            if(saved) corners = JSON.parse(saved);
+        } catch(e) {}
     }
 
     function processScan() {
         document.getElementById('loader').style.display = 'flex';
         
         setTimeout(() => {
-
             const dataCanvas = document.createElement('canvas');
             dataCanvas.width = imgObj.naturalWidth;
             dataCanvas.height = imgObj.naturalHeight;
@@ -580,23 +701,17 @@
             dataCtx.drawImage(imgObj, 0, 0);
 
             function getPixelDarkness(row, col) {
-
                 let u = (col) / (GRID_COLS - 1); 
                 let v = (row) / (GRID_ROWS - 1);
-                
                 let xTop = corners[0].x + (corners[1].x - corners[0].x) * u;
                 let yTop = corners[0].y + (corners[1].y - corners[0].y) * u;
                 let xBot = corners[3].x + (corners[2].x - corners[3].x) * u;
                 let yBot = corners[3].y + (corners[2].y - corners[3].y) * u;
-                
                 let rx = (xTop + (xBot - xTop) * v) * dataCanvas.width;
                 let ry = (yTop + (yBot - yTop) * v) * dataCanvas.height;
-                
                 let sx = Math.floor(rx);
                 let sy = Math.floor(ry);
-                
                 if(sx < 0 || sy < 0 || sx >= dataCanvas.width || sy >= dataCanvas.height) return 255;
-
                 let sampleSize = Math.max(1, Math.floor(dataCanvas.width * 0.004));
                 try {
                     let p = dataCtx.getImageData(sx - Math.floor(sampleSize/2), sy - Math.floor(sampleSize/2), sampleSize, sampleSize).data;
@@ -626,7 +741,6 @@
                 }
                 detectedBooklet += digit;
             }
-
             detectedBooklet = detectedBooklet.replace(/\?+$/, '');
 
             detectedAnswers.fill(null);
@@ -640,32 +754,23 @@
                         let val = getPixelDarkness(gridRow, b.c + opt);
                         if(val < minV) { minV = val; if(val < 145) best = optionsList[opt]; }
                     }
-                   detectedAnswers[qIdx] = best;
-        }
-    });
+                    detectedAnswers[qIdx] = best;
+                }
+            });
 
-    // --- NEW LOGIC: Check for Question Mark ---
-    if (detectedRoll.includes('?')) {
-        document.getElementById('loader').style.display = 'none'; // Loader hatao
-        document.getElementById('manualRollInput').value = detectedRoll; // Jo scan hua wo dikhao
-        document.getElementById('manualRollModal').style.display = 'flex'; // Popup dikhao
-        return; // Yahi ruk jao, aage mat badho
-    }
-    // ------------------------------------------
+            calculateResult();
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('result-card').style.display = 'block';
+            document.getElementById('result-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-    calculateResult();
-    
-    document.getElementById('loader').style.display = 'none';
-    const resCard = document.getElementById('result-card');
-    resCard.style.display = 'block';
-    resCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-}, 200);
+        }, 200);
     }
 
     function calculateResult() {
         document.getElementById('res-roll').innerText = detectedRoll;
         document.getElementById('res-booklet').innerText = detectedBooklet;
+        
+        getStudentData(detectedRoll); // Fetch Online Data
 
         let rollNum = parseInt(detectedRoll.replace(/\D/g, ''));
         let foundShift = SHIFT_RANGES.find(s => rollNum >= s.min && rollNum <= s.max);
@@ -686,19 +791,30 @@
         if(typeof allShiftData !== 'undefined') {
             const sData = allShiftData[currentShiftId];
             autoCalculateBestSet(sData);
+        } else {
+            alert("OMR Marks 0.00 rahenge kyunki 'questions-data.js' file missing hai!");
         }
     }
 
+   // --- UPDATED CALCULATION LOGIC (RSSB PATTERN) ---
    function autoCalculateBestSet(sData) {
+        // 1. Valid Questions Count (Total - Deleted)
         const validQ = sData.questions.length - sData.questions.filter(q => q.deleted).length;
-
+        
+        // 2. Dynamic Marks Per Question (200 / Valid Q)
         const marksPerQ = validQ > 0 ? (200 / validQ) : 0;
+        
+        // 3. Dynamic Negative Marking (1/3rd of New Marks)
         const negMark = marksPerQ / 3;
+
+        // 4. Penalty for Blank/Unattempted (Fixed 1.66666 as per rule)
+        const blankPenalty = 200 / 120; 
 
         let bestScore = -Infinity, bestSet = "", bestStats = {};
 
+        // Find Best Matching Set
         Object.keys(sData.seriesOrder).forEach(setCode => {
-            let stats = getScore(setCode, sData, marksPerQ, negMark);
+            let stats = getScore(setCode, sData, marksPerQ, negMark, blankPenalty);
             if(stats.score > bestScore) {
                 bestScore = stats.score;
                 bestSet = setCode;
@@ -706,29 +822,41 @@
             }
         });
 
+        // Update UI
         document.getElementById('detected-set').innerText = bestSet;
         document.getElementById('res-score').innerText = bestScore.toFixed(4);
         document.getElementById('res-correct').innerText = bestStats.c;
         document.getElementById('res-wrong').innerText = bestStats.w;
-        document.getElementById('res-skip').innerText = bestStats.s;
-
         document.getElementById('res-deleted').innerText = bestStats.d;
-
+        
+        // Skip Box Update
+        if(bestStats.u > 0) {
+            document.getElementById('res-skip').innerHTML = `${bestStats.s} <span style="font-size:0.6rem; color:#dc2626; display:block;">(${bestStats.u} Blank)</span>`;
+        } else {
+            document.getElementById('res-skip').innerText = bestStats.s;
+        }
+        
+        // Grid Generation
         const gridDiv = document.getElementById('detected-grid');
         gridDiv.innerHTML = '';
-        
-        const qOrder = sData.seriesOrder[bestSet]; 
+        const qOrder = sData.seriesOrder[bestSet];
 
         detectedAnswers.forEach((ans, i) => {
             let d = document.createElement('div');
             let className = 'd-cell ' + (ans ? 'filled' : '');
-
+            
+            // Handle Deleted Visuals
             if (qOrder && qOrder[i]) {
                 const masterIdx = qOrder[i];
                 const masterQ = sData.questions[masterIdx - 1];
                 if (masterQ && masterQ.deleted) {
                     className += ' deleted'; 
                 }
+            }
+
+            // Handle Blank Visuals
+            if (!ans) {
+                d.style.border = "1px solid red"; 
             }
 
             d.className = className;
@@ -738,22 +866,29 @@
         document.getElementById('preview-grid-wrapper').style.display = 'block';
     }
 
-   function getScore(setCode, sData, marksPerQ, negMark) {
-        let c = 0, w = 0, s = 0, d = 0; 
+   function getScore(setCode, sData, marksPerQ, negMark, blankPenalty) {
+        let c = 0; // Correct
+        let w = 0; // Wrong
+        let s = 0; // Skip (Option E Filled)
+        let d = 0; // Deleted
+        let u = 0; // Unattempted (Blank)
+
         const qOrder = sData.seriesOrder[setCode];
         const optConfig = sData.seriesOptionOrder ? sData.seriesOptionOrder[setCode] : null;
 
         qOrder.forEach((masterIdx, userIdx) => {
             if (userIdx >= detectedAnswers.length) return;
             const masterQ = sData.questions[masterIdx - 1];
-
-            if (masterQ.deleted) { 
-                d++; 
-                return; 
-            }
+            
+            if (masterQ.deleted) { d++; return; }
 
             const userAns = detectedAnswers[userIdx];
-            if (!userAns || userAns === 'E') { s++; return; }
+
+            // Case: Blank
+            if (!userAns) { u++; return; }
+
+            // Case: Option E (Skip)
+            if (userAns === 'E') { s++; return; }
 
             let pattern = [0, 1, 2, 3, 4];
             if (optConfig) {
@@ -763,6 +898,7 @@
 
             const visualIdx = optionsList.indexOf(userAns);
             const masterOptIdx = pattern[visualIdx];
+            
             if (!masterQ.options[masterOptIdx]) { w++; return; }
 
             const selText = masterQ.options[masterOptIdx].substring(3).trim();
@@ -771,47 +907,27 @@
             if (selText === corText) c++; else w++;
         });
 
-        return { score: (c * marksPerQ) - (w * negMark), c, w, s, d };
+        let totalScore = (c * marksPerQ) - (w * negMark) - (u * blankPenalty);
+        return { score: totalScore, c, w, s, d, u };
     }
-function submitManualRoll() {
-        const val = document.getElementById('manualRollInput').value.trim();
-        if(!val || val.length < 5) {
-            alert("Please enter a valid Roll Number!");
-            return;
-        }
 
-        detectedRoll = val;
-
-        document.getElementById('manualRollModal').style.display = 'none';
-
-        calculateResult();
-        
-        const resCard = document.getElementById('result-card');
-        resCard.style.display = 'block';
-        resCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  
-function triggerPrint() {
-
+ function triggerPrint() {
+        const d = new Date();
+        document.getElementById('p-date').innerText = d.toLocaleDateString();
         document.getElementById('p-roll').innerText = document.getElementById('res-roll').innerText;
         document.getElementById('p-booklet').innerText = document.getElementById('res-booklet').innerText;
         document.getElementById('p-shift').innerText = document.getElementById('res-shift').innerText;
         document.getElementById('p-set').innerText = document.getElementById('detected-set').innerText;
-
         document.getElementById('p-score').innerText = document.getElementById('res-score').innerText;
         document.getElementById('p-correct').innerText = document.getElementById('res-correct').innerText;
         document.getElementById('p-wrong').innerText = document.getElementById('res-wrong').innerText;
         document.getElementById('p-deleted').innerText = document.getElementById('res-deleted').innerText;
         document.getElementById('p-skip').innerText = document.getElementById('res-skip').innerText;
-
-        if(imgObj.src) {
-             document.getElementById('print-omr-img').src = imgObj.src;
-        }
-        
+        if(imgObj.src) document.getElementById('print-omr-img').src = imgObj.src;
         setTimeout(() => window.print(), 500);
     }
 </script>
-  <script>
+<script>
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');
 </script>
 </body>
