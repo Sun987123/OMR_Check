@@ -626,6 +626,7 @@ const OMR_SHIFTS = ['SHIFT1', 'SHIFT2', 'SHIFT3', 'SHIFT4', 'SHIFT5', 'SHIFT6'];
 let foundOMRUrl = ""; // सही URL को सेव करने के लिए
 
 function findOMRImage() {
+    document.getElementById('inp-online-roll').blur();
     const roll = document.getElementById('inp-online-roll').value.trim();
     const statusDiv = document.getElementById('search-status');
     const previewBox = document.getElementById('preview-box');
