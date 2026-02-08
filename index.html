@@ -161,6 +161,41 @@
             .p2-info-table td { border: 1px solid #ccc; padding: 5px; }
             .p2-info-table b { color: #1e40af; }
         }
+      /* --- PAPER VIEW CSS --- */
+        .q-block { margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        .q-text { font-size: 11px; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
+        .q-opts { display: grid; grid-template-columns: 1fr; gap: 2px; }
+        .opt-row { font-size: 10px; padding: 2px 5px; border-radius: 3px; display: flex; gap: 5px; }
+        
+        /* Status Colors */
+        .opt-correct { background-color: #dcfce7; color: #166534; font-weight: 600; border: 1px solid #86efac; } /* Green */
+        .opt-wrong { background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; } /* Red */
+        /* User Selection Styles */
+        .opt-user { background-color: #eff6ff; border: 1px solid #bfdbfe; } 
+        
+        /* NEW: Option E (Skipped) Style - Blue & Distinct */
+        .opt-skipped { 
+            background-color: #dbeafe !important; /* Light Blue */
+            border: 1px solid #2563eb !important; /* Dark Blue Border */
+            color: #1e40af !important; 
+            font-weight: 600;
+        }
+
+        /* Print Fixes */
+        @media print {
+            /* Ensure Page 3 is visible when active */
+            #print-page-3[style*="block"] { display: block !important; }
+            .opt-skipped { -webkit-print-color-adjust: exact; background-color: #dbeafe !important; }
+        } /* Blue (User Selection) */
+        
+        .badge-del { background: #94a3b8; color: white; padding: 1px 4px; font-size: 8px; border-radius: 3px; margin-left: 5px; }
+
+        @media print {
+            .paper-print-box { font-size: 10px; font-family: serif; }
+            .q-block { break-inside: avoid; page-break-inside: avoid; border-bottom: 1px dashed #ccc; }
+            .opt-correct { border: 1px solid #000; font-weight: bold; background: #eee !important; -webkit-print-color-adjust: exact; } 
+            /* Print me color save karne ke liye simple bold rakh sakte hain */
+        }
 
         @media (max-width: 768px) {
             .mobile-paste-btn { display: flex !important; align-items: center; justify-content: center; background: #fff; color: var(--primary); border-color: var(--primary); }
@@ -266,8 +301,23 @@
                     <i class="fas fa-eye"></i> View Answers
                 </button>
             </div>
+            
             <div id="preview-grid-wrapper" style="display:none;">
                  <div class="detected-grid" id="detected-grid"></div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; border-top:1px dashed #cbd5e1; padding-top:10px;">
+                <label style="font-size:0.75rem; display:flex; align-items:center; gap:5px; cursor:pointer;">
+                    <input type="checkbox" id="print-paper-opt"> 
+                    <span>Print Question Paper</span>
+                </label>
+                <button class="btn btn-outline btn-sm" style="width:auto;" onclick="togglePaperView()">
+                    <i class="fas fa-file-alt"></i> View Paper
+                </button>
+            </div>
+            
+            <div id="paper-view-wrapper" style="display:none; margin-top:15px; background:#fff; padding:10px; border:1px solid #e2e8f0; border-radius:8px; max-height:400px; overflow-y:auto;">
+                 <div id="paper-renderer"></div>
             </div>
         </div>
 
@@ -275,6 +325,7 @@
             <i class="fas fa-print"></i> Print Report
         </button>
     </div>
+</div>
 </div>
 
 <div id="print-container">
@@ -360,7 +411,8 @@
             </tr>
             <tr>
                 <td colspan="3" style="text-align:center; background:#f0f9ff; font-weight:bold; font-size:12px;">
-                    Raw Score: <span id="p2-score" style="color:#2563eb;"></span>
+                    Raw Score: <span id="p2-score" style="color:#2563eb;"></span> &nbsp;|&nbsp; 
+                    Final Score: <span id="p2-final" style="color:#16a34a;"></span>
                 </td>
             </tr>
         </table>
@@ -371,10 +423,20 @@
             <span style="border:1px solid red; padding:1px 4px;">Red Border = Blank</span>
         </div>
 
-        <div id="print-answers-grid" class="p2-grid">
-            </div>
+        <div id="print-answers-grid" class="p2-grid"></div>
     </div>
-</div>
+
+    <div id="print-page-3" class="page-break" style="display:none;">
+        <div class="print-header">
+            <div style="font-size: 18px; font-weight: 900; text-transform: uppercase; color: #1e40af;">Candidate Question Paper Report</div>
+            <div style="font-size: 11px;">
+                Set: <span id="p3-set"></span> | 
+                Raw: <span id="p3-score"></span> | 
+                Final: <span id="p3-final" style="font-weight:800; color:#16a34a;"></span>
+            </div>
+        </div>
+        <div id="print-paper-renderer" class="paper-print-box"></div>
+    </div>
 
 <div class="loading" id="loader">
     <div class="spinner"></div>
@@ -744,6 +806,12 @@
         // Render Grids
         renderGrid('detected-grid', bestSet, sData, false); // Screen
         renderGrid('print-answers-grid', bestSet, sData, true); // Print Page 2
+      	renderGrid('detected-grid', bestSet, sData, false); 
+        renderGrid('print-answers-grid', bestSet, sData, true);
+        
+        // NEW: Paper Render Call
+        renderFullPaper('paper-renderer', bestSet, sData);      // For Screen
+        renderFullPaper('print-paper-renderer', bestSet, sData); // For Print
     }
 
     function renderGrid(containerId, set, sData, isPrint) {
@@ -801,43 +869,166 @@
         return { score: (c*mpq)-(w*neg)-(u*blankPen), c, w, s, d, u };
     }
 
-   function triggerPrint() {
+ function triggerPrint() {
         const d = new Date().toLocaleDateString();
         document.getElementById('p-date').innerText = d;
         
-        // Page 1 Data Populate
+        // 1. Populate Basic Info (Page 1)
         ['roll','booklet','shift','score','correct','wrong','deleted','skip'].forEach(id => {
             const el = document.getElementById('p-'+id);
             const source = document.getElementById('res-'+id);
             if(el && source) el.innerText = source.innerText;
         });
         
-        document.getElementById('p-set').innerText = document.getElementById('detected-set').innerText;
+        const setVal = document.getElementById('detected-set').innerText;
+        document.getElementById('p-set').innerText = setVal;
         
+        // 2. Fetch FINAL SCORE from Online Data Box
+        // (Ye element 'onlineDataBox' ke andar hota h jo firebase se data aane par bharta h)
+        let finalScoreVal = document.getElementById('on-final').innerText;
+        if(!finalScoreVal || finalScoreVal === '--') finalScoreVal = "Pending/NA";
+
         // Set Image Source
         if(imgObj.src) document.getElementById('print-omr-img').src = imgObj.src;
 
-        // Page 2 Logic (Checkbox)
+        // --- PAGE 2 CONFIG (Answer Key) ---
         const includeAnswers = document.getElementById('print-answers-opt').checked;
         const page2 = document.getElementById('print-page-2');
         
         if(includeAnswers) {
-            page2.style.display = 'block'; // Print ke andar Page 2 dikhao
-            
-            // Fill Page 2 Details
+            page2.style.display = 'block';
             document.getElementById('p2-roll').innerText = document.getElementById('res-roll').innerText;
             document.getElementById('p2-shift').innerText = document.getElementById('res-shift').innerText;
-            document.getElementById('p2-set').innerText = document.getElementById('detected-set').innerText;
-            document.getElementById('p2-score').innerText = document.getElementById('res-score').innerText;
+            document.getElementById('p2-set').innerText = setVal;
+            
+            // Set Scores
+            document.getElementById('p2-score').innerText = document.getElementById('res-score').innerText; // Raw
+            document.getElementById('p2-final').innerText = finalScoreVal; // Final
         } else {
-            page2.style.display = 'none'; // Page 2 hatao
+            page2.style.display = 'none';
         }
 
-        // --- FIX: Ye line hata di gayi hai ---
-        // document.getElementById('print-container').style.display = 'block'; 
-        
-        // Ab CSS (@media print) khud sambhal lega ki kab dikhana h
+        // --- PAGE 3 CONFIG (Question Paper) ---
+        const includePaper = document.getElementById('print-paper-opt').checked;
+        const page3 = document.getElementById('print-page-3');
+
+        if(includePaper) {
+            page3.style.display = 'block';
+            document.getElementById('p3-set').innerText = setVal;
+            
+            // Set Scores
+            document.getElementById('p3-score').innerText = document.getElementById('res-score').innerText; // Raw
+            document.getElementById('p3-final').innerText = finalScoreVal; // Final
+        } else {
+            page3.style.display = 'none';
+        }
+
         setTimeout(() => window.print(), 300);
+    }
+  
+ function togglePaperView() {
+        const wrap = document.getElementById('paper-view-wrapper');
+        const renderer = document.getElementById('paper-renderer');
+        const btn = document.querySelector('button[onclick="togglePaperView()"] i');
+        
+        // Validation: Check if content is generated
+        if(renderer.innerHTML.trim() === "") {
+            alert("कृपया पहले OMR Sheet को Scan करें ताकि Paper generate हो सके।");
+            return;
+        }
+
+        if(wrap.style.display === 'none') {
+            wrap.style.display = 'block';
+            btn.className = 'fas fa-eye-slash';
+        } else {
+            wrap.style.display = 'none';
+            btn.className = 'fas fa-file-alt';
+        }
+    }
+
+  function renderFullPaper(containerId, set, sData) {
+        const container = document.getElementById(containerId);
+        if(!container) return;
+        container.innerHTML = '';
+
+        if(!sData || !sData.seriesOrder || !sData.seriesOrder[set]) {
+            container.innerHTML = '<div style="padding:10px; color:red; text-align:center;">Data Error: Please Scan Again</div>';
+            return;
+        }
+
+        const qOrder = sData.seriesOrder[set]; 
+        const optCfg = sData.seriesOptionOrder ? sData.seriesOptionOrder[set] : null;
+
+        qOrder.forEach((qIndex, idx) => {
+            const qData = sData.questions[qIndex - 1]; 
+            if(!qData) return;
+
+            const userAnsChar = detectedAnswers[idx]; 
+            
+            // Shuffling Pattern
+            let pat = [0,1,2,3,4];
+            if (optCfg) {
+                pat = (Array.isArray(optCfg) ? optCfg : (optCfg[qData.id] || optCfg['default'] || pat));
+            }
+
+            const qDiv = document.createElement('div');
+            qDiv.className = 'q-block';
+
+            let qStatus = qData.deleted ? '<span class="badge-del">DELETED</span>' : '';
+            qDiv.innerHTML = `<div class="q-text">Q${idx+1}. ${qData.question} ${qStatus}</div>`;
+            
+            const optDiv = document.createElement('div');
+            optDiv.className = 'q-opts';
+
+            optionsList.forEach((label, labelIdx) => { 
+                const originalOptIdx = pat[labelIdx]; 
+                if(!qData.options || !qData.options[originalOptIdx]) return;
+
+                const optText = qData.options[originalOptIdx];
+                const cleanOptText = optText.replace(/^[A-E]\)\s*/, ''); 
+                const correctAnsClean = qData.answer.replace(/^[A-E]\)\s*/, '').trim();
+                
+                let rowClass = 'opt-row';
+                let icon = '<i class="far fa-circle"></i>';
+
+                // --- MAIN LOGIC CHANGE HERE ---
+                const isUserSelected = (userAnsChar === label);
+                const isCorrect = (cleanOptText.trim() === correctAnsClean);
+                const isOptionE = (label === 'E'); 
+
+                if (isUserSelected) {
+                    if (isOptionE) {
+                        // CASE 1: User Selected 'E' -> ALWAYS BLUE (No Red, No Green)
+                        rowClass += ' opt-skipped'; 
+                        icon = '<i class="fas fa-dot-circle"></i>'; // Dot Icon
+                    } 
+                    else if (isCorrect) {
+                        // CASE 2: User Correct
+                        rowClass += ' opt-correct'; 
+                        icon = '<i class="fas fa-check-circle"></i>';
+                    } 
+                    else {
+                        // CASE 3: User Wrong (Only for A, B, C, D)
+                        rowClass += ' opt-wrong'; 
+                        icon = '<i class="fas fa-times-circle"></i>';
+                    }
+                } 
+                else if (isCorrect) {
+                    // CASE 4: Correct Answer (Show Green if user missed it)
+                    rowClass += ' opt-correct'; 
+                    icon = '<i class="fas fa-check"></i>';
+                    optDiv.style.borderLeft = "3px solid #16a34a"; 
+                }
+
+                const row = document.createElement('div');
+                row.className = rowClass;
+                row.innerHTML = `<span style="width:15px;">${icon}</span> <b>${label})</b> <span>${cleanOptText}</span>`;
+                optDiv.appendChild(row);
+            });
+
+            qDiv.appendChild(optDiv);
+            container.appendChild(qDiv);
+        });
     }
 </script>
 <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');</script>
