@@ -5,7 +5,7 @@
     <meta name="theme-color" content="#1e1e2e">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OMR Scanner (Pro)</title>
+    <title>OMR Master Scanner (Pro)</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -775,11 +775,11 @@
         
         if(shift) {
             document.getElementById('res-shift').innerText = shift.label;
-            document.getElementById('res-shift').style.background = '#dcfce7';
+            document.getElementById('res-shift').style.background = '#595FFF';
             if(typeof allShiftData !== 'undefined') autoCalculateBestSet(allShiftData[shift.id]);
         } else {
             document.getElementById('res-shift').innerText = "Check Roll No";
-            document.getElementById('res-shift').style.background = '##595FFF';
+            document.getElementById('res-shift').style.background = '#fee2e2';
         }
     }
 
