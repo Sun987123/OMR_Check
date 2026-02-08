@@ -144,17 +144,55 @@
         .ob-lbl { font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
         .ob-val { font-weight: 700; color: #0f172a; }
 
+        /* --- PRINT CSS (Fixed for Mobile) --- */
+        /* Default: Hide Print Container */
+        #print-container { display: none; }
+
         @media print {
-            @page { margin: 1cm; size: A4; }
-            body { background: white; margin: 0; padding: 0; -webkit-print-color-adjust: exact; }
-            .container, .card, .btn, .loading, .login-overlay { display: none !important; }
+            @page { margin: 5mm; size: A4; }
             
+            /* Hide Everything Else */
+            body > *:not(#print-container) {
+                display: none !important;
+            }
+
+            /* Show Print Container */
             #print-container { 
                 display: block !important; 
-                width: 100%; height: auto; padding: 10px; box-sizing: border-box;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                margin: 0;
+                padding: 10px;
+                background: white;
+                font-family: sans-serif;
+                color: black;
+                z-index: 9999;
+            }
+
+            /* Mobile Fixes */
+            .print-header { text-align: center; margin-bottom: 20px; }
+            .print-score { border: 2px solid #1e40af; padding: 15px; border-radius: 12px; background: #f3f4f6 !important; -webkit-print-color-adjust: exact; }
+            
+            .print-omr-wrapper {
+                text-align: center; 
+                width: 100%; 
+                height: auto;
+                max-height: 18cm; /* A4 Fit */
+                overflow: hidden; 
+                border: 1px solid #ddd; 
+                display: flex; 
+                justify-content: center;
+                page-break-inside: avoid;
+            }
+            
+            img#print-omr-img {
+                max-width: 100%;
+                height: auto;
+                object-fit: contain;
             }
         }
-        #print-container { display: none; }
 
         @media (max-width: 768px) {
             .mobile-paste-btn {
@@ -287,12 +325,12 @@
 </div>
 
 <div id="print-container">
-    <div class="print-header" style="text-align: center; margin-bottom: 10px;">
-        <div class="ph-title" style="font-size: 24px; font-weight: 900; text-transform: uppercase; color: #1e40af;">Result Report 4th Class</div>
-        <div style="font-size:12px; color:#555;"> Dream_Link OMR Auto-Evaluation | Date: <span id="p-date"></span></div>
+    <div class="print-header">
+        <div style="font-size: 24px; font-weight: 900; text-transform: uppercase; color: #1e40af;">Result Report 4th Class</div>
+        <div style="font-size:12px; color:#555;"> OMR Auto-Evaluation by MP SALODIYA | Date: <span id="p-date"></span></div>
     </div>
 
-    <div id="print-extra-info" style="display:none; margin-bottom:15px; border:1px solid #1e293b; border-radius:8px; padding:10px; font-size:12px; text-align:left; background:#f8fafc;">
+    <div id="print-extra-info" style="display:none; margin-bottom:15px; border:1px solid #1e293b; border-radius:8px; padding:10px; font-size:12px; text-align:left; background:#f8fafc; -webkit-print-color-adjust: exact;">
         <div style="border-bottom:1px dashed #cbd5e1; padding-bottom:5px; margin-bottom:5px; font-weight:bold; color:#1e40af;">SERVER RECORD DETAILS</div>
         <table style="width:100%; border-collapse:collapse;">
             <tr>
@@ -313,32 +351,32 @@
         </table>
     </div>
 
-    <div class="print-score" style="display: flex; flex-direction: column; gap: 15px; background: #f3f4f6 !important; border: 2px solid #1e40af; border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+    <div class="print-score">
         
         <div style="display: flex; justify-content: space-around; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
             <div style="text-align:center;">
-                <span class="ps-val" id="p-score" style="font-size: 28px; font-weight: 800; color: #1e40af;">0.00</span>
-                <span class="ps-lbl" style="font-size: 10px; text-transform: uppercase; font-weight: bold;">OMR RAW Score</span>
+                <span id="p-score" style="font-size: 28px; font-weight: 800; color: #1e40af; display:block;">0.00</span>
+                <span style="font-size: 10px; text-transform: uppercase; font-weight: bold;">OMR RAW Score</span>
             </div>
             <div style="text-align:center; color:#16a34a;">
-                <span class="ps-val" id="p-correct" style="font-size: 24px; font-weight: 800;">0</span>
-                <span class="ps-lbl" style="font-size: 10px; text-transform: uppercase; font-weight: bold;">Correct</span>
+                <span id="p-correct" style="font-size: 24px; font-weight: 800; display:block;">0</span>
+                <span style="font-size: 10px; text-transform: uppercase; font-weight: bold;">Correct</span>
             </div>
             <div style="text-align:center; color:#dc2626;">
-                <span class="ps-val" id="p-wrong" style="font-size: 24px; font-weight: 800;">0</span>
-                <span class="ps-lbl" style="font-size: 10px; text-transform: uppercase; font-weight: bold;">Wrong</span>
+                <span id="p-wrong" style="font-size: 24px; font-weight: 800; display:block;">0</span>
+                <span style="font-size: 10px; text-transform: uppercase; font-weight: bold;">Wrong</span>
             </div>
             <div style="text-align:center; color:#d97706;">
-                <span class="ps-val" id="p-skip" style="font-size: 24px; font-weight: 800;">0</span>
-                <span class="ps-lbl" style="font-size: 10px; text-transform: uppercase; font-weight: bold;">Skip</span>
+                <span id="p-skip" style="font-size: 24px; font-weight: 800; display:block;">0</span>
+                <span style="font-size: 10px; text-transform: uppercase; font-weight: bold;">Skip</span>
             </div>
             <div style="text-align:center; color:#64748b;">
-                <span class="ps-val" id="p-deleted" style="font-size: 24px; font-weight: 800;">0</span>
-                <span class="ps-lbl" style="font-size: 10px; text-transform: uppercase; font-weight: bold;">Deleted</span>
+                <span id="p-deleted" style="font-size: 24px; font-weight: 800; display:block;">0</span>
+                <span style="font-size: 10px; text-transform: uppercase; font-weight: bold;">Deleted</span>
             </div>
         </div>
 
-        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #333; font-weight: 600;">
+        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #333; font-weight: 600; margin-top:15px;">
             <div>Roll No: <span id="p-roll" style="font-weight: 800; font-size: 14px;"></span></div>
             <div>Booklet: <span id="p-booklet" style="font-weight: 800; font-size: 14px;"></span></div>
             <div>Set: <span id="p-set" style="font-weight: 800; font-size: 14px; color:#d97706;"></span></div>
@@ -346,9 +384,9 @@
         </div>
     </div>
 
-    <div style="font-size:10px; font-weight:bold; margin-bottom:5px; border-bottom:1px solid #ccc;">Clean OMR Scan Proof:</div>
-    <div class="print-omr-wrapper" style="text-align: center; width: 100%; max-height: 18cm; overflow: hidden; border: 1px solid #ddd; display: flex; justify-content: center;">
-        <img id="print-omr-img" class="print-omr" alt="OMR Scan" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+    <div style="font-size:10px; font-weight:bold; margin-bottom:5px; margin-top:20px; border-bottom:1px solid #ccc;">Clean OMR Scan Proof:</div>
+    <div class="print-omr-wrapper">
+        <img id="print-omr-img" alt="OMR Scan">
     </div>
     <div class="print-footer" style="position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; font-size: 10px; color: #888; background: #fff; padding: 5px;">Generated by MP SALODIYA</div>
 </div>
@@ -374,7 +412,6 @@
 
     let db, auth;
 
-    // 1. Initialize Firebase
     function initSystem() {
         if (typeof firebase === 'undefined') {
             console.error("Firebase script not loaded! Check Internet.");
@@ -393,10 +430,8 @@
         });
     }
 
-    // 2. Login Function
     function adminLogin() {
-        if (!auth) initSystem(); // Safety Check
-
+        if (!auth) initSystem();
         const e = document.getElementById('uEmail').value;
         const p = document.getElementById('uPass').value;
         const m = document.getElementById('lMsg');
@@ -412,11 +447,10 @@
         } else {
             m.innerText = "System Initializing... Click again!";
             m.style.display='block';
-            initSystem(); // Retry init
+            initSystem();
         }
     }
 
-    // 3. Fetch Data (With Mother Name & Rank)
     async function getStudentData(roll) {
         if(!roll || !db) return;
         
@@ -441,18 +475,15 @@
             if(snap.exists()) {
                 const d = snap.val();
                 
-                // Set Values
                 document.getElementById('on-name').innerText = d.candidate || '-';
                 document.getElementById('on-father').innerText = d.father || '-';
                 document.getElementById('on-mother').innerText = d.mother || '-';
                 document.getElementById('on-cat').innerText = d.category || '-';
                 document.getElementById('on-gender').innerText = d.gender || '-';
                 
-                // Rank Logic
                 let rankVal = d.merit ? `#${d.merit}` : (d.rank ? `#${d.rank}` : 'NA');
                 document.getElementById('on-rank').innerText = rankVal;
 
-                // Marks Logic
                 let rawScore = d.raw ? parseFloat(d.raw).toFixed(4) : 'NA';
                 let finalScore = (d.normalized || d.raw || 0);
                 let finalScoreFmt = parseFloat(finalScore).toFixed(4);
@@ -463,7 +494,6 @@
                 status.innerText = "FOUND ✔";
                 status.style.color = "#16a34a";
 
-                // PRINT DATA UPDATE
                 printBox.style.display = 'block';
                 document.getElementById('p-on-name').innerText = d.candidate || '-';
                 document.getElementById('p-on-rank').innerText = rankVal;
@@ -484,7 +514,6 @@
         }
     }
 
-    // --- OMR LOGIC ---
     const GRID_ROWS = 41;
     const GRID_COLS = 37;
 
@@ -507,11 +536,9 @@
     const optionsList = ['A', 'B', 'C', 'D', 'E'];
 
     window.onload = function() {
-        initSystem(); // Init Firebase immediately
+        initSystem();
         
-        // Data File Check
         if (typeof allShiftData === 'undefined') {
-            console.error("questions-data.js MISSING");
             alert("⚠️ ERROR: 'questions-data.js' file is MISSING in this folder!\nOMR Marks calculate nahi honge.");
         }
 
@@ -770,7 +797,7 @@
         document.getElementById('res-roll').innerText = detectedRoll;
         document.getElementById('res-booklet').innerText = detectedBooklet;
         
-        getStudentData(detectedRoll); // Fetch Online Data
+        getStudentData(detectedRoll);
 
         let rollNum = parseInt(detectedRoll.replace(/\D/g, ''));
         let foundShift = SHIFT_RANGES.find(s => rollNum >= s.min && rollNum <= s.max);
@@ -796,23 +823,14 @@
         }
     }
 
-   // --- UPDATED CALCULATION LOGIC (RSSB PATTERN) ---
    function autoCalculateBestSet(sData) {
-        // 1. Valid Questions Count (Total - Deleted)
         const validQ = sData.questions.length - sData.questions.filter(q => q.deleted).length;
-        
-        // 2. Dynamic Marks Per Question (200 / Valid Q)
         const marksPerQ = validQ > 0 ? (200 / validQ) : 0;
-        
-        // 3. Dynamic Negative Marking (1/3rd of New Marks)
         const negMark = marksPerQ / 3;
-
-        // 4. Penalty for Blank/Unattempted (Fixed 1.66666 as per rule)
         const blankPenalty = 200 / 120; 
 
         let bestScore = -Infinity, bestSet = "", bestStats = {};
 
-        // Find Best Matching Set
         Object.keys(sData.seriesOrder).forEach(setCode => {
             let stats = getScore(setCode, sData, marksPerQ, negMark, blankPenalty);
             if(stats.score > bestScore) {
@@ -822,21 +840,18 @@
             }
         });
 
-        // Update UI
         document.getElementById('detected-set').innerText = bestSet;
         document.getElementById('res-score').innerText = bestScore.toFixed(4);
         document.getElementById('res-correct').innerText = bestStats.c;
         document.getElementById('res-wrong').innerText = bestStats.w;
         document.getElementById('res-deleted').innerText = bestStats.d;
         
-        // Skip Box Update
         if(bestStats.u > 0) {
             document.getElementById('res-skip').innerHTML = `${bestStats.s} <span style="font-size:0.6rem; color:#dc2626; display:block;">(${bestStats.u} Blank)</span>`;
         } else {
             document.getElementById('res-skip').innerText = bestStats.s;
         }
         
-        // Grid Generation
         const gridDiv = document.getElementById('detected-grid');
         gridDiv.innerHTML = '';
         const qOrder = sData.seriesOrder[bestSet];
@@ -845,7 +860,6 @@
             let d = document.createElement('div');
             let className = 'd-cell ' + (ans ? 'filled' : '');
             
-            // Handle Deleted Visuals
             if (qOrder && qOrder[i]) {
                 const masterIdx = qOrder[i];
                 const masterQ = sData.questions[masterIdx - 1];
@@ -853,11 +867,7 @@
                     className += ' deleted'; 
                 }
             }
-
-            // Handle Blank Visuals
-            if (!ans) {
-                d.style.border = "1px solid red"; 
-            }
+            if (!ans) d.style.border = "1px solid red"; 
 
             d.className = className;
             d.innerText = (i+1) + (ans ? ':' + ans : '');
@@ -867,12 +877,7 @@
     }
 
    function getScore(setCode, sData, marksPerQ, negMark, blankPenalty) {
-        let c = 0; // Correct
-        let w = 0; // Wrong
-        let s = 0; // Skip (Option E Filled)
-        let d = 0; // Deleted
-        let u = 0; // Unattempted (Blank)
-
+        let c = 0, w = 0, s = 0, d = 0, u = 0;
         const qOrder = sData.seriesOrder[setCode];
         const optConfig = sData.seriesOptionOrder ? sData.seriesOptionOrder[setCode] : null;
 
@@ -881,13 +886,9 @@
             const masterQ = sData.questions[masterIdx - 1];
             
             if (masterQ.deleted) { d++; return; }
-
             const userAns = detectedAnswers[userIdx];
 
-            // Case: Blank
             if (!userAns) { u++; return; }
-
-            // Case: Option E (Skip)
             if (userAns === 'E') { s++; return; }
 
             let pattern = [0, 1, 2, 3, 4];
@@ -898,12 +899,9 @@
 
             const visualIdx = optionsList.indexOf(userAns);
             const masterOptIdx = pattern[visualIdx];
-            
             if (!masterQ.options[masterOptIdx]) { w++; return; }
-
             const selText = masterQ.options[masterOptIdx].substring(3).trim();
             const corText = masterQ.answer.substring(3).trim();
-
             if (selText === corText) c++; else w++;
         });
 
@@ -911,20 +909,35 @@
         return { score: totalScore, c, w, s, d, u };
     }
 
- function triggerPrint() {
+    // --- TRIGGER PRINT (Mobile Fixed) ---
+    function triggerPrint() {
         const d = new Date();
         document.getElementById('p-date').innerText = d.toLocaleDateString();
+        
+        // Populate Data
         document.getElementById('p-roll').innerText = document.getElementById('res-roll').innerText;
         document.getElementById('p-booklet').innerText = document.getElementById('res-booklet').innerText;
         document.getElementById('p-shift').innerText = document.getElementById('res-shift').innerText;
         document.getElementById('p-set').innerText = document.getElementById('detected-set').innerText;
+        
         document.getElementById('p-score').innerText = document.getElementById('res-score').innerText;
         document.getElementById('p-correct').innerText = document.getElementById('res-correct').innerText;
         document.getElementById('p-wrong').innerText = document.getElementById('res-wrong').innerText;
         document.getElementById('p-deleted').innerText = document.getElementById('res-deleted').innerText;
         document.getElementById('p-skip').innerText = document.getElementById('res-skip').innerText;
-        if(imgObj.src) document.getElementById('print-omr-img').src = imgObj.src;
-        setTimeout(() => window.print(), 500);
+        
+        if(imgObj.src) {
+             document.getElementById('print-omr-img').src = imgObj.src;
+        }
+        
+        // Show Print Container (Force Display Block)
+        const pCont = document.getElementById('print-container');
+        pCont.style.display = 'block';
+
+        setTimeout(() => {
+            window.print();
+            // Optional: Hide again after print dialog closes (though not strictly necessary as css handles media)
+        }, 500);
     }
 </script>
 <script>
