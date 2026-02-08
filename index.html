@@ -142,13 +142,27 @@
             .print-header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #1e40af; padding-bottom: 10px; }
             .print-score { border: 1px solid #1e40af; padding: 10px; border-radius: 8px; background: #f3f4f6 !important; -webkit-print-color-adjust: exact; margin-bottom: 15px; }
             
-            /* Increase Image Height in Print */
+            /* --- UPDATED PRINT OMR STYLES --- */
             .print-omr-wrapper { 
-                text-align: center; width: 100%; 
-                max-height: 24cm; /* Increased height */
-                overflow: hidden; border: 1px solid #ddd; display: flex; justify-content: center; margin-bottom: 10px; 
+                text-align: center; 
+                width: 100%; 
+                /* Height कम कर दी (24cm -> 19cm) ताकि पेज ब्रेक न हो */
+                max-height: 19cm; 
+                overflow: hidden; 
+                border: 1px solid #eee; 
+                display: flex; 
+                justify-content: center; 
+                align-items: flex-start;
+                margin-bottom: 5px; 
+                margin-top: 5px;
             }
-            img#print-omr-img { max-width: 100%; max-height: 100%; object-fit: contain; }
+            
+            img#print-omr-img { 
+                /* Width 80% कर दी ताकि साइड्स से स्पेस रहे */
+                max-width: 70%; 
+                max-height: 80%; 
+                object-fit: contain; 
+            }
             
             /* Page 2 Grid Styling */
             .p2-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; font-size: 9px; }
@@ -218,9 +232,35 @@
 
 <div class="container">
     <div class="card" id="scanner-card">
-        <h2><i class="fas fa-bullseye"></i> OMR Scanner</h2>
-        <div class="helper-text" style="font-size:0.7rem;">
-            <b>Instructions:</b> Red corners match OMR corners. Green dots match bubbles.
+        
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h2 style="margin:0; color:#0f172a; font-size:1.1rem; display:flex; align-items:center; gap:8px; font-weight:800;">
+                <i class="fas fa-bullseye" style="color:var(--primary);"></i> OMR Scanner
+            </h2>
+            <button onclick="softReset()" style="background:#f1f5f9; border:1px solid #cbd5e1; color:#64748b; width:24px; height:24px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;" title="Reset All">
+                <i class="fas fa-redo-alt" style="font-size:14px;"></i>
+            </button>
+        </div>
+
+        <div style="margin-bottom: 15px; max-width: 100%;">
+            
+            <div style="display:flex; align-items:center; background:white; border:1px solid #cbd5e1; border-radius:50px; padding:2px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <input type="number" id="inp-online-roll" placeholder="Roll Number" 
+                       style="flex:1; border:none; outline:none; padding:8px 20px; font-size:14px; background:transparent; border-radius:50px 0 0 50px;">
+                <button onclick="findOMRImage()" style="background:var(--primary); color:white; border:none; padding:8px 20px; border-radius:50px; cursor:pointer; font-weight:600; font-size:14px; margin:2px;">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+
+            <div id="search-status" style="font-size:11px; font-weight:600; margin-top:5px; text-align:center; display:none;"></div>
+
+            <div id="preview-box" style="display:none; margin-top:10px; text-align:center; background:#f8fafc; padding:8px; border-radius:12px; border:1px dashed #cbd5e1;">
+                <p style="font-size:10px; color:#64748b; margin:0 0 5px 0;">✔ Image Found</p>
+                <img id="omr-preview-img" style="max-width:100%; height:120px; object-fit:contain; border:1px solid #ddd; border-radius:4px; background:white;">
+                <button class="btn" onclick="pasteToCanvas()" style="background:#16a34a; color:white; margin-top:5px; padding:6px 15px; font-size:12px; border-radius:20px;">
+                    <i class="fas fa-check"></i> Paste & Scan
+                </button>
+            </div>
         </div>
         
         <div class="scanner-wrapper" id="scan-wrap" onclick="if(!imgObj.src) document.getElementById('fileIn').click()">
@@ -269,7 +309,7 @@
 
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
             <div style="font-size:0.8rem; font-weight:700; color:#c2410c;">SET: <span id="detected-set">--</span></div>
-            <button class="btn btn-outline btn-sm" style="width:auto;" onclick="location.reload()">
+            <button class="btn btn-outline btn-sm" style="width:auto;" onclick="softReset()">
                 <i class="fas fa-redo"></i> Reset
             </button>
         </div>
@@ -576,6 +616,179 @@
     let detectedRoll = "", detectedBooklet = "", detectedAnswers = new Array(120).fill(null);
     const optionsList = ['A', 'B', 'C', 'D', 'E'];
 
+
+/* --- FINAL WORKING OMR LOGIC --- */
+
+// शिफ्ट्स की लिस्ट (यह कोड में बस एक ही बार होनी चाहिए)
+const OMR_SHIFTS = ['SHIFT1', 'SHIFT2', 'SHIFT3', 'SHIFT4', 'SHIFT5', 'SHIFT6'];
+let foundOMRUrl = ""; // सही URL को सेव करने के लिए
+
+function findOMRImage() {
+    const roll = document.getElementById('inp-online-roll').value.trim();
+    const statusDiv = document.getElementById('search-status');
+    const previewBox = document.getElementById('preview-box');
+    const previewImg = document.getElementById('omr-preview-img');
+    const btn = document.querySelector('button[onclick="findOMRImage()"]');
+
+    if(!roll) return alert("Please enter a Roll Number");
+
+    // UI Reset
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    statusDiv.style.display = 'block';
+    statusDiv.innerText = "Searching...";
+    statusDiv.style.color = "#d97706"; 
+    previewBox.style.display = 'none';
+    foundOMRUrl = "";
+
+    let shiftsChecked = 0;
+    let found = false;
+
+    // Direct Image Checking (Like OMR get.html)
+    OMR_SHIFTS.forEach(shift => {
+        if(found) return;
+
+        // सीधा सरकारी सर्वर का लिंक (No Proxy yet) - यह "OMR get.html" जैसा तरीका है
+        const url = `https://rssbasonline.com/images/${shift}/${shift}/${roll}.jpg`;
+        
+        const img = new Image();
+        img.onload = () => {
+            if(!found) {
+                found = true;
+                foundOMRUrl = url; // असली URL सेव करें
+                
+                // Preview में दिखाएं
+                statusDiv.innerText = "OMR Found! (Click Paste below)";
+                statusDiv.style.color = "#16a34a";
+                previewImg.src = url;
+                previewBox.style.display = 'block';
+                
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-search"></i>';
+            }
+        };
+
+        img.onerror = () => {
+            shiftsChecked++;
+            if(shiftsChecked === OMR_SHIFTS.length && !found) {
+                statusDiv.innerText = "OMR Not Found in any shift.";
+                statusDiv.style.color = "#dc2626";
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-search"></i>';
+            }
+        };
+
+        img.src = url; // ट्रिगर
+    });
+}
+
+function pasteToCanvas() {
+    if (!foundOMRUrl) return alert("No image found to paste!");
+
+    // Button को लोड हो रहा है ऐसा दिखाएं
+    const btn = document.querySelector('button[onclick="pasteToCanvas()"]');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Downloading...';
+    btn.disabled = true;
+
+    // Loader Box भी दिखाएं
+    document.getElementById('loader').style.display = 'flex';
+
+    // Proxy URL (High Speed)
+    const proxyUrl = `https://wsrv.nl/?url=${encodeURIComponent(foundOMRUrl)}&output=jpg`;
+
+    const img = new Image();
+    img.crossOrigin = "Anonymous"; 
+    
+    img.onload = () => {
+        loadToCanvas(img);
+        
+        // बटन को वापस नार्मल करें
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        
+        // नीचे स्क्रॉल करें
+        document.getElementById('scan-wrap').scrollIntoView({behavior: "smooth"});
+    };
+
+    img.onerror = () => {
+        alert("Image load failed. Server busy.");
+        document.getElementById('loader').style.display = 'none';
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    };
+
+    img.src = proxyUrl;
+}
+
+  /* --- SOFT RESET FUNCTION (No Reload) --- */
+function softReset() {
+    // 1. रिजल्ट और प्रीव्यू छिपाएं
+    document.getElementById('result-card').style.display = 'none';
+    document.getElementById('preview-box').style.display = 'none';
+    document.getElementById('search-status').style.display = 'none';
+    document.getElementById('paper-view-wrapper').style.display = 'none';
+    document.getElementById('preview-grid-wrapper').style.display = 'none';
+
+    // 2. इनपुट्स खाली करें
+    document.getElementById('inp-online-roll').value = '';
+    document.getElementById('fileIn').value = '';
+    
+    // 3. कैनवास रीसेट करें (Clear Image)
+    imgObj = new Image(); // इमेज ऑब्जेक्ट खाली करें
+    foundOMRUrl = "";     // URL खाली करें
+    
+    // कैनवास को साफ करें
+    if(ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // अपलोड हिंट वापस लाएं
+    document.getElementById('upload-hint').style.display = 'block';
+    
+    // स्कैन बटन डिसेबल करें
+    document.getElementById('scanBtn').disabled = true;
+
+    // 4. बटन्स को रीसेट करें (Icon वापस लाएं)
+    const viewBtn = document.querySelector('.answer-section button i');
+    if(viewBtn) viewBtn.className = 'fas fa-eye';
+
+    // 5. ऊपर स्क्रॉल करें
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function loadToCanvas(imgElement) {
+    imgObj = imgElement; 
+
+    const wrap = document.getElementById('scan-wrap');
+    canvas.width = wrap.clientWidth;
+    
+    // सही हाइट सेट करें
+    if(imgElement.naturalWidth > 0) {
+        canvas.height = canvas.width * (imgElement.naturalHeight / imgElement.naturalWidth);
+    } else {
+        canvas.height = 300; // Fallback
+    }
+    
+    // इमेज ड्रा करें
+    if(ctx) ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
+    
+    // UI अपडेट्स
+    document.getElementById('upload-hint').style.display = 'none';
+    document.getElementById('scanBtn').disabled = false;
+    document.getElementById('loader').style.display = 'none';
+    
+    // --- LAYOUT FIX (Auto Save) ---
+    // पहले चेक करें कि क्या यूजर ने पहले कोई सेटिंग सेव की है?
+    const savedLayout = localStorage.getItem('omr_fixed_v4');
+    
+    if (savedLayout) {
+        // अगर सेव है, तो वही यूज़ करें
+        corners = JSON.parse(savedLayout);
+    } else {
+        // अगर नहीं है, तो डिफॉल्ट कोनों पर सेट करें
+        corners = [{x:0.04, y:0.04}, {x:0.96, y:0.04}, {x:0.96, y:0.96}, {x:0.04, y:0.96}];
+    }
+    
+    draw(); // अब पॉइंट्स ड्रा करें
+}
     window.onload = function() {
         initSystem();
         if (typeof allShiftData === 'undefined') alert("Data file missing!");
