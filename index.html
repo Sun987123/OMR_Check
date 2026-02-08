@@ -34,7 +34,7 @@
             background: var(--bg); 
             color: #1e293b; 
             margin: 0; 
-            padding: 10px; 
+            padding: 8px; /* Reduced padding for mobile */
             overscroll-behavior: none;
         }
         
@@ -42,33 +42,36 @@
         
         .card { 
             background: var(--surface); 
-            padding: 16px; 
+            padding: 12px; /* Compact padding */
             border-radius: 12px; 
             box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
-            margin-bottom: 12px; 
+            margin-bottom: 10px; 
             border: 1px solid #e2e8f0; 
         }
 
-        h2 { margin: 0 0 12px 0; color: #0f172a; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; font-weight: 700; }
+        h2 { margin: 0 0 10px 0; color: #0f172a; font-size: 1rem; display: flex; align-items: center; gap: 8px; font-weight: 700; }
 
+        /* --- MOBILE OPTIMIZED BUTTONS --- */
         .btn { 
-            width: 100%; padding: 12px; border: none; border-radius: 8px; 
+            width: 100%; padding: 10px; border: none; border-radius: 8px; 
             font-weight: 600; cursor: pointer; display: flex; align-items: center; 
-            justify-content: center; gap: 8px; font-size: 1rem; transition: 0.2s;
+            justify-content: center; gap: 6px; font-size: 0.9rem; transition: 0.2s;
         }
+        .btn-sm { padding: 6px 10px; font-size: 0.8rem; }
+        
         .btn-primary { background: var(--primary); color: white; }
         .btn-primary:disabled { background: #94a3b8; }
-        .btn-outline { background: transparent; border: 2px solid #cbd5e1; color: #475569; }
+        .btn-outline { background: transparent; border: 1px solid #cbd5e1; color: #475569; }
         
         /* SCANNER WRAPPER */
         .scanner-wrapper { 
             position: relative; 
             width: 100%; 
-            min-height: 250px; 
+            min-height: 220px; /* Reduced height */
             background: #0f172a; 
             border-radius: 8px; 
             overflow: hidden; 
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
             display: block; 
         }
@@ -83,123 +86,86 @@
         .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
         /* RESULT STYLES */
-        .result-box { display: none; animation: slideUp 0.5s ease-out; margin-top: 20px; border: 2px solid var(--primary); }
+        .result-box { display: none; animation: slideUp 0.5s ease-out; margin-top: 15px; border: 2px solid var(--primary); }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
         .result-header {
             background: linear-gradient(135deg, #1e40af, #3b82f6);
-            color: white; padding: 20px; border-radius: 10px;
-            text-align: center; margin-bottom: 15px;
+            color: white; padding: 15px; border-radius: 10px;
+            text-align: center; margin-bottom: 12px;
             box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
         }
         
-        .score-val { font-size: 3rem; font-weight: 800; line-height: 1; margin: 5px 0; }
-        .meta-info { display: flex; justify-content: space-between; background: rgba(255,255,255,0.1); padding: 8px; border-radius: 6px; font-size: 0.85rem; margin-top: 10px; }
+        .score-val { font-size: 2.5rem; font-weight: 800; line-height: 1; margin: 5px 0; }
+        .meta-info { display: flex; justify-content: space-between; background: rgba(255,255,255,0.1); padding: 6px; border-radius: 6px; font-size: 0.8rem; margin-top: 10px; }
 
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .stat-item { background: #f8fafc; padding: 10px 5px; border-radius: 8px; text-align: center; border: 1px solid #e2e8f0; }
-        .st-num { font-size: 1.3rem; font-weight: 800; display: block; }
-        .st-lbl { font-size: 0.7rem; color: #64748b; font-weight: 700; text-transform: uppercase; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+        .stat-item { background: #f8fafc; padding: 8px 4px; border-radius: 6px; text-align: center; border: 1px solid #e2e8f0; }
+        .st-num { font-size: 1.1rem; font-weight: 800; display: block; }
+        .st-lbl { font-size: 0.6rem; color: #64748b; font-weight: 700; text-transform: uppercase; }
         
         .c-green { color: var(--success); } .c-red { color: var(--danger); } .c-yellow { color: #d97706; } .c-gray { color: #64748b; }
 
+        /* --- ANSWER GRID (HIDDEN BY DEFAULT) --- */
+        .answer-section { margin-top: 15px; border-top: 1px dashed #cbd5e1; padding-top: 10px; }
+        
         .detected-grid { 
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(35px, 1fr)); gap: 5px; 
-            max-height: 200px; overflow-y: auto; margin-top: 15px; padding: 5px;
-            background: #fff; border: 1px solid #e2e8f0; border-radius: 6px;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(32px, 1fr)); gap: 4px; 
+            max-height: 250px; overflow-y: auto; padding: 5px;
+            background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 6px;
         }
-        .d-cell { font-size: 10px; text-align: center; padding: 6px 0; background: #f1f5f9; border-radius: 4px; cursor: pointer; color: #475569; font-weight: 600; }
-        .d-cell.filled { background: var(--primary); color: white; }
-        .d-cell.deleted { opacity: 0.5; background: #94a3b8 !important; color: #fff; text-decoration: line-through; border: 1px dashed #475569; }
+        .d-cell { font-size: 9px; text-align: center; padding: 4px 0; background: #fff; border-radius: 3px; border:1px solid #e2e8f0; color: #475569; font-weight: 600; }
+        .d-cell.filled { background: var(--primary); color: white; border-color:var(--primary); }
+        .d-cell.deleted { opacity: 0.6; background: #94a3b8 !important; color: #fff; text-decoration: line-through; border: 1px dashed #475569; }
 
         .helper-text { 
-            font-size: 0.85rem; color: #334155; margin-bottom: 10px; 
-            text-align: center; background: #e0f2fe; padding: 10px; 
+            font-size: 0.75rem; color: #334155; margin-bottom: 8px; 
+            text-align: center; background: #e0f2fe; padding: 8px; 
             border-radius: 6px; border: 1px solid #bae6fd;
-            line-height: 1.4;
         }
 
         .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 999; display: none; flex-direction: column; justify-content: center; align-items: center; }
-        .spinner { width: 45px; height: 45px; border: 5px solid #e2e8f0; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        .spinner { width: 35px; height: 35px; border: 4px solid #e2e8f0; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         /* --- LOGIN & ONLINE DATA CSS --- */
-        .login-overlay {
-            position: fixed; inset: 0; background: #f1f5f9; z-index: 9999;
-            display: flex; align-items: center; justify-content: center; padding: 20px;
-        }
-        .login-card {
-            background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 350px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; border: 1px solid #cbd5e1;
-        }
-        .login-inp {
-            width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #e2e8f0;
-            border-radius: 8px; background: #f8fafc; outline: none;
-        }
-        .online-box {
-            background: #eff6ff; border: 1px dashed #3b82f6; border-radius: 8px;
-            padding: 10px; margin-bottom: 15px; display: none; text-align: left;
-        }
-        .ob-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.85rem; }
-        .ob-lbl { font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        .login-overlay { position: fixed; inset: 0; background: #f1f5f9; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .login-card { background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 320px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; border: 1px solid #cbd5e1; }
+        .login-inp { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; outline: none; font-size: 0.9rem; }
+        .online-box { background: #eff6ff; border: 1px dashed #3b82f6; border-radius: 8px; padding: 8px; margin-bottom: 12px; display: none; text-align: left; }
+        .ob-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 0.8rem; }
+        .ob-lbl { font-size: 0.65rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
         .ob-val { font-weight: 700; color: #0f172a; }
 
-        /* --- PRINT CSS (Fixed for Mobile) --- */
-        /* Default: Hide Print Container */
+        /* --- PRINT CSS (Fixed for Mobile & 2nd Page) --- */
         #print-container { display: none; }
 
         @media print {
             @page { margin: 5mm; size: A4; }
-            
-            /* Hide Everything Else */
-            body > *:not(#print-container) {
-                display: none !important;
-            }
-
-            /* Show Print Container */
+            body > *:not(#print-container) { display: none !important; }
             #print-container { 
                 display: block !important; 
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                margin: 0;
-                padding: 10px;
-                background: white;
-                font-family: sans-serif;
-                color: black;
-                z-index: 9999;
+                position: absolute; top: 0; left: 0; width: 100%; margin: 0; padding: 5px; background: white; 
+                font-family: sans-serif; color: black; z-index: 9999;
             }
-
-            /* Mobile Fixes */
-            .print-header { text-align: center; margin-bottom: 20px; }
-            .print-score { border: 2px solid #1e40af; padding: 15px; border-radius: 12px; background: #f3f4f6 !important; -webkit-print-color-adjust: exact; }
+            .page-break { page-break-before: always; display: block; margin-top: 20px; }
             
-            .print-omr-wrapper {
-                text-align: center; 
-                width: 100%; 
-                height: auto;
-                max-height: 18cm; /* A4 Fit */
-                overflow: hidden; 
-                border: 1px solid #ddd; 
-                display: flex; 
-                justify-content: center;
-                page-break-inside: avoid;
-            }
+            .print-header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #1e40af; padding-bottom: 10px; }
+            .print-score { border: 1px solid #1e40af; padding: 10px; border-radius: 8px; background: #f3f4f6 !important; -webkit-print-color-adjust: exact; margin-bottom: 15px; }
             
-            img#print-omr-img {
-                max-width: 100%;
-                height: auto;
-                object-fit: contain;
-            }
+            .print-omr-wrapper { text-align: center; width: 100%; max-height: 14cm; overflow: hidden; border: 1px solid #ddd; display: flex; justify-content: center; margin-bottom: 10px; }
+            img#print-omr-img { max-width: 100%; height: auto; object-fit: contain; }
+            
+            /* Page 2 Grid Styling */
+            .p2-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; font-size: 9px; }
+            .p2-cell { border: 1px solid #ccc; padding: 4px; text-align: center; border-radius: 2px; }
+            .p2-filled { background: #1e40af !important; color: white !important; -webkit-print-color-adjust: exact; }
+            .p2-del { background: #94a3b8 !important; color: white; text-decoration: line-through; -webkit-print-color-adjust: exact; }
         }
 
         @media (max-width: 768px) {
-            .mobile-paste-btn {
-                display: flex !important; align-items: center; justify-content: center;
-                background: #fff; color: var(--primary); border-color: var(--primary);
-            }
-            .controls { grid-template-columns: 1fr auto 1fr; }
+            .mobile-paste-btn { display: flex !important; align-items: center; justify-content: center; background: #fff; color: var(--primary); border-color: var(--primary); }
+            .controls { grid-template-columns: 1fr auto 1fr; gap: 6px; }
         }
     </style>
 </head>
@@ -207,43 +173,41 @@
 
 <div id="authScreen" class="login-overlay">
     <div class="login-card">
-        <h2 style="justify-content:center; color:#2563eb; margin-top:0;">SECURE LOGIN</h2>
-        <p style="font-size:0.85rem; color:#64748b; margin-bottom:20px;">Enter credentials to access OMR Data</p>
+        <h3 style="color:#2563eb; margin:0 0 10px 0;">SECURE LOGIN</h3>
+        <p style="font-size:0.8rem; color:#64748b; margin-bottom:15px;">Enter credentials</p>
         <input type="email" id="uEmail" class="login-inp" placeholder="Admin Email">
         <input type="password" id="uPass" class="login-inp" placeholder="Password">
-        <button class="btn btn-primary" onclick="adminLogin()">UNLOCK SYSTEM</button>
-        <p id="lMsg" style="color:red; font-size:0.8rem; margin-top:10px; display:none;"></p>
+        <button class="btn btn-primary" onclick="adminLogin()">UNLOCK</button>
+        <p id="lMsg" style="color:red; font-size:0.75rem; margin-top:8px; display:none;"></p>
     </div>
 </div>
 
 <div class="container">
     <div class="card" id="scanner-card">
         <h2><i class="fas fa-bullseye"></i> OMR Scanner</h2>
-        <div class="helper-text">
-            <b><i class="fas fa-hand-point-up"></i> निर्देश:</b> लाल कोनों को सेट करें। हरे गोले (Green Dots) एकदम OMR के काले गोलों के ऊपर आने चाहिए।
+        <div class="helper-text" style="font-size:0.7rem;">
+            <b>Instructions:</b> Red corners match OMR corners. Green dots match bubbles.
         </div>
         
         <div class="scanner-wrapper" id="scan-wrap" onclick="if(!imgObj.src) document.getElementById('fileIn').click()">
             <canvas id="omrCanvas"></canvas>
-            
             <div id="upload-hint">
-                <i class="fas fa-camera" style="font-size:32px; opacity:0.9; margin-bottom:8px;"></i>
-                <div style="font-size:14px; font-weight:600;">Tap to Upload OMR</div>
-                <div style="font-size:10px; opacity:0.7;">High Accuracy Mode</div>
+                <i class="fas fa-camera" style="font-size:24px; opacity:0.8; margin-bottom:5px;"></i>
+                <div style="font-size:12px; font-weight:600;">Tap to Upload</div>
             </div>
         </div>
 
         <div class="controls">
             <button class="btn btn-outline" onclick="document.getElementById('fileIn').click()">
-                <i class="fas fa-upload"></i> Re-Upload
+                <i class="fas fa-upload"></i> Re-Up
             </button>
-            <button class="btn btn-outline mobile-paste-btn" onclick="handleMobilePaste()" style="display:none; width: auto; padding: 12px 15px;">
+            <button class="btn btn-outline mobile-paste-btn" onclick="handleMobilePaste()" style="display:none; width:auto; padding:0 12px;">
                 <i class="fas fa-paste"></i>
             </button>
             <input type="file" id="fileIn" accept="image/*,application/pdf" style="display:none" onchange="handleFileSelect(this)">
             
             <button class="btn btn-primary" id="scanBtn" onclick="processScan()" disabled>
-                <i class="fas fa-bolt"></i> Scan Details
+                <i class="fas fa-bolt"></i> Scan
             </button>
         </div>
     </div>
@@ -251,155 +215,160 @@
     <div class="card result-box" id="result-card">
         
         <div id="onlineDataBox" class="online-box">
-            <div style="border-bottom:1px solid #bfdbfe; padding-bottom:5px; margin-bottom:5px; font-weight:800; color:#1e40af; font-size:0.8rem; display:flex; justify-content:space-between;">
+            <div style="border-bottom:1px solid #bfdbfe; padding-bottom:5px; margin-bottom:5px; font-weight:800; color:#1e40af; font-size:0.75rem; display:flex; justify-content:space-between;">
                 <span>SERVER DATA (4TH GRADE)</span>
                 <span id="on-status" style="color:#d97706;">SEARCHING...</span>
             </div>
             <div class="ob-grid">
-                <div><div class="ob-lbl">Candidate Name</div><div class="ob-val" id="on-name">--</div></div>
-                <div><div class="ob-lbl">Rank / Merit</div><div class="ob-val" id="on-rank" style="color:#9333ea;">--</div></div>
-                
-                <div><div class="ob-lbl">Father's Name</div><div class="ob-val" id="on-father">--</div></div>
-                <div><div class="ob-lbl">Mother's Name</div><div class="ob-val" id="on-mother">--</div></div>
-                
+                <div><div class="ob-lbl">Name</div><div class="ob-val" id="on-name">--</div></div>
+                <div><div class="ob-lbl">Rank</div><div class="ob-val" id="on-rank" style="color:#9333ea;">--</div></div>
+                <div><div class="ob-lbl">Father</div><div class="ob-val" id="on-father">--</div></div>
+                <div><div class="ob-lbl">Mother</div><div class="ob-val" id="on-mother">--</div></div>
                 <div><div class="ob-lbl">Category</div><div class="ob-val" id="on-cat">--</div></div>
                 <div><div class="ob-lbl">Gender</div><div class="ob-val" id="on-gender">--</div></div>
             </div>
-            <div style="margin-top:8px; padding-top:5px; border-top:1px dashed #bfdbfe; display:flex; justify-content:space-between; font-size:0.85rem;">
-                <div style="display:flex; flex-direction:column;">
-                    <span class="ob-lbl">Server Raw</span>
-                    <span id="on-raw" style="font-weight:800; color:#2563eb;">--</span>
-                </div>
-                <div style="display:flex; flex-direction:column; text-align:right;">
-                    <span class="ob-lbl">Server Final</span>
-                    <span id="on-final" style="font-weight:800; color:#16a34a;">--</span>
-                </div>
+            <div style="margin-top:6px; padding-top:5px; border-top:1px dashed #bfdbfe; display:flex; justify-content:space-between; font-size:0.8rem;">
+                <div><span class="ob-lbl">Raw:</span> <span id="on-raw" style="font-weight:800; color:#2563eb;">--</span></div>
+                <div><span class="ob-lbl">Final:</span> <span id="on-final" style="font-weight:800; color:#16a34a;">--</span></div>
             </div>
         </div>
 
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <div style="font-size:0.9rem; font-weight:700; color:#c2410c;">SET: <span id="detected-set">--</span></div>
-            <button class="btn btn-outline" style="width:auto; padding:5px 10px; font-size:0.8rem;" onclick="location.reload()">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="font-size:0.8rem; font-weight:700; color:#c2410c;">SET: <span id="detected-set">--</span></div>
+            <button class="btn btn-outline btn-sm" style="width:auto;" onclick="location.reload()">
                 <i class="fas fa-redo"></i> Reset
             </button>
         </div>
 
         <div class="result-header">
             <div class="score-val" id="res-score">0.00</div>
-            <div style="font-size:0.8rem; opacity:0.9;">OMR Scan Score (Raw)</div>
-            
+            <div style="font-size:0.7rem; opacity:0.9;">OMR Scan Score (Raw)</div>
             <div class="meta-info">
                 <div>Roll: <b id="res-roll">--</b></div>
                 <div>Booklet: <b id="res-booklet">--</b></div>
             </div>
-            <div style="margin-top:5px; font-size:0.8rem; background:rgba(0,0,0,0.2); padding:4px; border-radius:4px;" id="res-shift">Shift Detecting...</div>
+            <div style="margin-top:5px; font-size:0.7rem; background:rgba(0,0,0,0.2); padding:3px; border-radius:4px;" id="res-shift">Detecting...</div>
         </div>
         
-        <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr);">
-            <div class="stat-item">
-                <span class="st-num c-green" id="res-correct">0</span>
-                <span class="st-lbl">Correct</span>
-            </div>
-            <div class="stat-item">
-                <span class="st-num c-red" id="res-wrong">0</span>
-                <span class="st-lbl">Wrong</span>
-            </div>
-            <div class="stat-item">
-                <span class="st-num c-yellow" id="res-skip">0</span>
-                <span class="st-lbl">Skip</span>
-            </div>
-            <div class="stat-item">
-                <span class="st-num c-gray" id="res-deleted">0</span>
-                <span class="st-lbl">Delete</span>
-            </div>
+        <div class="stats-grid">
+            <div class="stat-item"><span class="st-num c-green" id="res-correct">0</span><span class="st-lbl">Right</span></div>
+            <div class="stat-item"><span class="st-num c-red" id="res-wrong">0</span><span class="st-lbl">Wrong</span></div>
+            <div class="stat-item"><span class="st-num c-yellow" id="res-skip">0</span><span class="st-lbl">Skip</span></div>
+            <div class="stat-item"><span class="st-num c-gray" id="res-deleted">0</span><span class="st-lbl">Del</span></div>
         </div>
         
-        <div id="preview-grid-wrapper" style="display:none;">
-             <div class="detected-grid" id="detected-grid"></div>
+        <div class="answer-section">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <label style="font-size:0.75rem; display:flex; align-items:center; gap:5px; cursor:pointer;">
+                    <input type="checkbox" id="print-answers-opt"> 
+                    <span>Print Answer Key (Page 2)</span>
+                </label>
+                <button class="btn btn-outline btn-sm" style="width:auto;" onclick="toggleAnswerGrid()">
+                    <i class="fas fa-eye"></i> View Answers
+                </button>
+            </div>
+            <div id="preview-grid-wrapper" style="display:none;">
+                 <div class="detected-grid" id="detected-grid"></div>
+            </div>
         </div>
 
-        <button class="btn btn-primary" onclick="triggerPrint()" style="margin-top:15px; background:#1e293b;">
-            <i class="fas fa-print"></i> Print Report (A4)
+        <button class="btn btn-primary" onclick="triggerPrint()" style="margin-top:10px; background:#1e293b;">
+            <i class="fas fa-print"></i> Print Report
         </button>
     </div>
 </div>
 
 <div id="print-container">
-    <div class="print-header">
-        <div style="font-size: 24px; font-weight: 900; text-transform: uppercase; color: #1e40af;">Result Report 4th Class</div>
-        <div style="font-size:12px; color:#555;"> OMR Auto-Evaluation by MP SALODIYA | Date: <span id="p-date"></span></div>
+    <div class="print-page-1">
+        <div class="print-header">
+            <div style="font-size: 20px; font-weight: 900; text-transform: uppercase; color: #1e40af;">Result Report 4th Class</div>
+            <div style="font-size:11px; color:#555;"> OMR Auto-Evaluation by MP SALODIYA | Date: <span id="p-date"></span></div>
+        </div>
+
+        <div id="print-extra-info" style="display:none; margin-bottom:10px; border:1px solid #1e293b; border-radius:8px; padding:8px; font-size:11px; text-align:left; background:#f8fafc; -webkit-print-color-adjust: exact;">
+            <div style="border-bottom:1px dashed #cbd5e1; padding-bottom:4px; margin-bottom:4px; font-weight:bold; color:#1e40af;">SERVER RECORD DETAILS</div>
+            <table style="width:100%; border-collapse:collapse;">
+                <tr>
+                    <td style="padding:3px; width:50%;"><b>Name:</b> <span id="p-on-name"></span></td>
+                    <td style="padding:3px; width:50%; color:#9333ea;"><b>Rank:</b> <span id="p-on-rank" style="font-weight:900;"></span></td>
+                </tr>
+                <tr>
+                    <td style="padding:3px;"><b>Father:</b> <span id="p-on-father"></span></td>
+                    <td style="padding:3px;"><b>Mother:</b> <span id="p-on-mother"></span></td>
+                </tr>
+                <tr>
+                    <td style="padding:3px;"><b>Cat:</b> <span id="p-on-cat"></span></td>
+                    <td style="padding:3px;">
+                        <b>Raw:</b> <span id="p-on-raw"></span> | 
+                        <b>Final:</b> <span id="p-on-final"></span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="print-score">
+            <div style="display: flex; justify-content: space-around; border-bottom: 1px solid #ddd; padding-bottom: 8px;">
+                <div style="text-align:center;">
+                    <span id="p-score" style="font-size: 24px; font-weight: 800; color: #1e40af; display:block;">0.00</span>
+                    <span style="font-size: 9px; text-transform: uppercase; font-weight: bold;">OMR RAW Score</span>
+                </div>
+                <div style="text-align:center; color:#16a34a;">
+                    <span id="p-correct" style="font-size: 20px; font-weight: 800; display:block;">0</span>
+                    <span style="font-size: 9px; text-transform: uppercase; font-weight: bold;">Correct</span>
+                </div>
+                <div style="text-align:center; color:#dc2626;">
+                    <span id="p-wrong" style="font-size: 20px; font-weight: 800; display:block;">0</span>
+                    <span style="font-size: 9px; text-transform: uppercase; font-weight: bold;">Wrong</span>
+                </div>
+                <div style="text-align:center; color:#d97706;">
+                    <span id="p-skip" style="font-size: 20px; font-weight: 800; display:block;">0</span>
+                    <span style="font-size: 9px; text-transform: uppercase; font-weight: bold;">Skip</span>
+                </div>
+                <div style="text-align:center; color:#64748b;">
+                    <span id="p-deleted" style="font-size: 20px; font-weight: 800; display:block;">0</span>
+                    <span style="font-size: 9px; text-transform: uppercase; font-weight: bold;">Deleted</span>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 10px; color: #333; font-weight: 600; margin-top:10px;">
+                <div>Roll: <span id="p-roll" style="font-weight: 800; font-size: 12px;"></span></div>
+                <div>Booklet: <span id="p-booklet" style="font-weight: 800; font-size: 12px;"></span></div>
+                <div>Set: <span id="p-set" style="font-weight: 800; font-size: 12px; color:#d97706;"></span></div>
+                <div>Shift: <span id="p-shift"></span></div>
+            </div>
+        </div>
+
+        <div style="font-size:10px; font-weight:bold; margin-bottom:5px; margin-top:10px; border-bottom:1px solid #ccc;">Clean OMR Scan Proof:</div>
+        <div class="print-omr-wrapper">
+            <img id="print-omr-img" alt="OMR Scan">
+        </div>
     </div>
 
-    <div id="print-extra-info" style="display:none; margin-bottom:15px; border:1px solid #1e293b; border-radius:8px; padding:10px; font-size:12px; text-align:left; background:#f8fafc; -webkit-print-color-adjust: exact;">
-        <div style="border-bottom:1px dashed #cbd5e1; padding-bottom:5px; margin-bottom:5px; font-weight:bold; color:#1e40af;">SERVER RECORD DETAILS</div>
-        <table style="width:100%; border-collapse:collapse;">
-            <tr>
-                <td style="padding:4px; width:50%;"><b>Name:</b> <span id="p-on-name"></span></td>
-                <td style="padding:4px; width:50%; color:#9333ea;"><b>Rank:</b> <span id="p-on-rank" style="font-weight:900;"></span></td>
-            </tr>
-            <tr>
-                <td style="padding:4px;"><b>Father:</b> <span id="p-on-father"></span></td>
-                <td style="padding:4px;"><b>Mother:</b> <span id="p-on-mother"></span></td>
-            </tr>
-            <tr>
-                <td style="padding:4px;"><b>Category:</b> <span id="p-on-cat"></span></td>
-                <td style="padding:4px;">
-                    <b>Raw:</b> <span id="p-on-raw"></span> | 
-                    <b>Final:</b> <span id="p-on-final"></span>
-                </td>
-            </tr>
-        </table>
-    </div>
-
-    <div class="print-score">
+    <div id="print-page-2" class="page-break" style="display:none;">
+        <div class="print-header">
+            <div style="font-size: 18px; font-weight: 900; text-transform: uppercase; color: #1e40af;">Answer Key Analysis</div>
+            <div style="font-size:11px; color:#555;">Roll No: <span id="p2-roll" style="font-weight:bold;"></span> | Name: <span id="p2-name"></span></div>
+        </div>
         
-        <div style="display: flex; justify-content: space-around; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
-            <div style="text-align:center;">
-                <span id="p-score" style="font-size: 28px; font-weight: 800; color: #1e40af; display:block;">0.00</span>
-                <span style="font-size: 10px; text-transform: uppercase; font-weight: bold;">OMR RAW Score</span>
-            </div>
-            <div style="text-align:center; color:#16a34a;">
-                <span id="p-correct" style="font-size: 24px; font-weight: 800; display:block;">0</span>
-                <span style="font-size: 10px; text-transform: uppercase; font-weight: bold;">Correct</span>
-            </div>
-            <div style="text-align:center; color:#dc2626;">
-                <span id="p-wrong" style="font-size: 24px; font-weight: 800; display:block;">0</span>
-                <span style="font-size: 10px; text-transform: uppercase; font-weight: bold;">Wrong</span>
-            </div>
-            <div style="text-align:center; color:#d97706;">
-                <span id="p-skip" style="font-size: 24px; font-weight: 800; display:block;">0</span>
-                <span style="font-size: 10px; text-transform: uppercase; font-weight: bold;">Skip</span>
-            </div>
-            <div style="text-align:center; color:#64748b;">
-                <span id="p-deleted" style="font-size: 24px; font-weight: 800; display:block;">0</span>
-                <span style="font-size: 10px; text-transform: uppercase; font-weight: bold;">Deleted</span>
-            </div>
+        <div style="font-size:10px; margin-bottom:10px; color:#444;">
+            <b>Legend:</b> <span style="background:#1e40af; color:#fff; padding:1px 4px;">Blue = Your Ans</span> | 
+            <span style="text-decoration:line-through; background:#94a3b8; color:#fff; padding:1px 4px;">Strike = Deleted</span> |
+            <span style="border:1px solid red; padding:1px 4px;">Red Border = Blank</span>
         </div>
 
-        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #333; font-weight: 600; margin-top:15px;">
-            <div>Roll No: <span id="p-roll" style="font-weight: 800; font-size: 14px;"></span></div>
-            <div>Booklet: <span id="p-booklet" style="font-weight: 800; font-size: 14px;"></span></div>
-            <div>Set: <span id="p-set" style="font-weight: 800; font-size: 14px; color:#d97706;"></span></div>
-            <div>Shift: <span id="p-shift"></span></div>
-        </div>
+        <div id="print-answers-grid" class="p2-grid">
+            </div>
     </div>
-
-    <div style="font-size:10px; font-weight:bold; margin-bottom:5px; margin-top:20px; border-bottom:1px solid #ccc;">Clean OMR Scan Proof:</div>
-    <div class="print-omr-wrapper">
-        <img id="print-omr-img" alt="OMR Scan">
-    </div>
-    <div class="print-footer" style="position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; font-size: 10px; color: #888; background: #fff; padding: 5px;">Generated by MP SALODIYA</div>
 </div>
 
 <div class="loading" id="loader">
     <div class="spinner"></div>
-    <p style="margin-top:15px; font-weight:600; color:#475569;">Scanning (High Quality)...</p>
+    <p style="margin-top:15px; font-weight:600; color:#475569;">Processing...</p>
 </div>
 
 <script src="questions-data.js"></script>
 
 <script>
-    // --- FIREBASE CONFIGURATION ---
+    // --- FIREBASE SETUP ---
     const firebaseConfig = {
         apiKey: "AIzaSyAiLtCapS9zH6JMA_S3EpRm84kR90IUALI",
         authDomain: "examdata.firebaseapp.com",
@@ -413,20 +382,12 @@
     let db, auth;
 
     function initSystem() {
-        if (typeof firebase === 'undefined') {
-            console.error("Firebase script not loaded! Check Internet.");
-            return;
-        }
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        
+        if (typeof firebase === 'undefined') return;
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         db = firebase.database();
         auth = firebase.auth();
-        
         auth.onAuthStateChanged(user => {
-            const screen = document.getElementById('authScreen');
-            if(screen) screen.style.display = user ? 'none' : 'flex';
+            document.getElementById('authScreen').style.display = user ? 'none' : 'flex';
         });
     }
 
@@ -436,45 +397,39 @@
         const p = document.getElementById('uPass').value;
         const m = document.getElementById('lMsg');
         
-        if(!e || !p) { m.innerText="Details required!"; m.style.display='block'; return; }
+        if(!e || !p) { m.innerText="Required!"; m.style.display='block'; return; }
         m.style.display='none';
         
         if(auth) {
             auth.signInWithEmailAndPassword(e, p).catch(err => {
-                m.innerText = "Wrong Credentials / Network Error";
+                m.innerText = "Invalid Credentials";
                 m.style.display='block';
             });
         } else {
-            m.innerText = "System Initializing... Click again!";
-            m.style.display='block';
+            m.innerText = "Retrying...";
             initSystem();
         }
     }
 
+    // --- DATA FETCHING ---
     async function getStudentData(roll) {
         if(!roll || !db) return;
         
         const box = document.getElementById('onlineDataBox');
-        const status = document.getElementById('on-status');
         const printBox = document.getElementById('print-extra-info');
         
         box.style.display = 'block';
-        status.innerText = "SEARCHING...";
-        status.style.color = "#d97706";
+        document.getElementById('on-status').innerText = "SEARCHING...";
         
-        // Reset Fields
         const fields = ['on-name','on-rank','on-father','on-mother','on-cat','on-gender','on-raw','on-final'];
-        fields.forEach(id => {
-            const el = document.getElementById(id);
-            if(el) el.innerText = '--';
-        });
+        fields.forEach(id => document.getElementById(id).innerText = '--');
 
         try {
             const snap = await db.ref('exams/fourthgrade2025/byroll/' + roll).once('value');
-            
             if(snap.exists()) {
                 const d = snap.val();
                 
+                // Fill Screen
                 document.getElementById('on-name').innerText = d.candidate || '-';
                 document.getElementById('on-father').innerText = d.father || '-';
                 document.getElementById('on-mother').innerText = d.mother || '-';
@@ -485,15 +440,14 @@
                 document.getElementById('on-rank').innerText = rankVal;
 
                 let rawScore = d.raw ? parseFloat(d.raw).toFixed(4) : 'NA';
-                let finalScore = (d.normalized || d.raw || 0);
-                let finalScoreFmt = parseFloat(finalScore).toFixed(4);
+                let finalScoreFmt = parseFloat(d.normalized || d.raw || 0).toFixed(4);
 
                 document.getElementById('on-raw').innerText = rawScore;
                 document.getElementById('on-final').innerText = finalScoreFmt;
-                
-                status.innerText = "FOUND ✔";
-                status.style.color = "#16a34a";
+                document.getElementById('on-status').innerText = "FOUND ✔";
+                document.getElementById('on-status').style.color = "#16a34a";
 
+                // Fill Print Page 1
                 printBox.style.display = 'block';
                 document.getElementById('p-on-name').innerText = d.candidate || '-';
                 document.getElementById('p-on-rank').innerText = rankVal;
@@ -502,21 +456,37 @@
                 document.getElementById('p-on-cat').innerText = d.category || '-';
                 document.getElementById('p-on-raw').innerText = rawScore;
                 document.getElementById('p-on-final').innerText = finalScoreFmt;
+                
+                // Fill Print Page 2 Header
+                document.getElementById('p2-name').innerText = d.candidate || '-';
 
             } else {
-                status.innerText = "NOT FOUND ✘";
-                status.style.color = "#dc2626";
+                document.getElementById('on-status').innerText = "NOT FOUND";
+                document.getElementById('on-status').style.color = "#dc2626";
                 printBox.style.display = 'none';
+                document.getElementById('p2-name').innerText = "Not Found";
             }
         } catch(err) {
             console.error(err);
-            status.innerText = "SERVER ERROR";
         }
     }
 
+    // --- UI TOGGLES ---
+    function toggleAnswerGrid() {
+        const grid = document.getElementById('preview-grid-wrapper');
+        const btn = document.querySelector('.answer-section button i');
+        if(grid.style.display === 'none') {
+            grid.style.display = 'block';
+            btn.className = 'fas fa-eye-slash';
+        } else {
+            grid.style.display = 'none';
+            btn.className = 'fas fa-eye';
+        }
+    }
+
+    // --- OMR CORE ---
     const GRID_ROWS = 41;
     const GRID_COLS = 37;
-
     const SHIFT_RANGES = [
         { id: 'shift1', min: 110101, max: 1521943, label: '19 Sep - Shift 1' },
         { id: 'shift2', min: 1521944, max: 1933786, label: '19 Sep - Shift 2' },
@@ -528,20 +498,13 @@
 
     let corners = [{x:0.04, y:0.04}, {x:0.96, y:0.04}, {x:0.96, y:0.96}, {x:0.04, y:0.96}];
     let canvas, ctx, imgObj = new Image();
-    let activeCorner = -1;
-
-    let detectedRoll = "";
-    let detectedBooklet = "";
-    let detectedAnswers = new Array(120).fill(null);
+    let detectedRoll = "", detectedBooklet = "", detectedAnswers = new Array(120).fill(null);
     const optionsList = ['A', 'B', 'C', 'D', 'E'];
 
     window.onload = function() {
         initSystem();
+        if (typeof allShiftData === 'undefined') alert("Data file missing!");
         
-        if (typeof allShiftData === 'undefined') {
-            alert("⚠️ ERROR: 'questions-data.js' file is MISSING in this folder!\nOMR Marks calculate nahi honge.");
-        }
-
         canvas = document.getElementById('omrCanvas');
         ctx = canvas.getContext('2d');
         loadLayout();
@@ -552,86 +515,11 @@
         window.addEventListener('resize', resizeCanvas);
     };
 
-    async function processFile(file) {
-        if (!file) return;
-
-        document.getElementById('loader').style.display = 'flex';
-
-        if (file.type === 'application/pdf') {
-            try {
-                const arrayBuffer = await file.arrayBuffer();
-                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-                const page = await pdf.getPage(1);
-                
-                const viewport = page.getViewport({ scale: 2.0 });
-                const tempCanvas = document.createElement('canvas');
-                const tempCtx = tempCanvas.getContext('2d');
-                tempCanvas.height = viewport.height;
-                tempCanvas.width = viewport.width;
-
-                await page.render({ canvasContext: tempCtx, viewport: viewport }).promise;
-                imgObj.src = tempCanvas.toDataURL('image/jpeg', 0.9);
-            } catch (error) {
-                alert("PDF Error");
-                document.getElementById('loader').style.display = 'none';
-                return;
-            }
-        } else if (file.type.startsWith('image/')) {
-            const reader = new FileReader();
-            reader.onload = function(e) { imgObj.src = e.target.result; }
-            reader.readAsDataURL(file);
-        } else {
-            alert("Images Only!");
-            document.getElementById('loader').style.display = 'none';
-            return;
-        }
-
-        imgObj.onload = function() {
-            document.getElementById('upload-hint').style.display = 'none';
-            document.getElementById('scanBtn').disabled = false;
-            resizeCanvas();
-            document.getElementById('loader').style.display = 'none';
-        }
-    }
-
-    function handleFileSelect(input) { processFile(input.files[0]); }
-
-    document.addEventListener('paste', function(e) {
-        const items = e.clipboardData.items;
-        for (let i = 0; i < items.length; i++) {
-            if (items[i].type.indexOf('image') !== -1) {
-                const blob = items[i].getAsFile();
-                processFile(blob);
-                e.preventDefault(); 
-                break;
-            }
-        }
-    });
-
-    async function handleMobilePaste() {
-        try {
-            const items = await navigator.clipboard.read();
-            for (const item of items) {
-                const imageType = item.types.find(type => type.startsWith('image/'));
-                if (imageType) {
-                    const blob = await item.getType(imageType);
-                    processFile(blob);
-                    return;
-                }
-            }
-        } catch (err) {}
-    }
-
     function resizeCanvas() {
         const wrap = document.querySelector('.scanner-wrapper');
         if(wrap && canvas) {
             canvas.width = wrap.clientWidth;
-            if(imgObj.src && imgObj.naturalWidth > 0) {
-                const ratio = imgObj.naturalHeight / imgObj.naturalWidth;
-                canvas.height = canvas.width * ratio;
-            } else {
-                canvas.height = 250; 
-            }
+            canvas.height = (imgObj.src && imgObj.naturalWidth > 0) ? canvas.width * (imgObj.naturalHeight / imgObj.naturalWidth) : 220;
             draw();
         }
     }
@@ -640,308 +528,283 @@
         if(!ctx) return;
         ctx.clearRect(0,0, canvas.width, canvas.height);
         if(imgObj.src) ctx.drawImage(imgObj, 0, 0, canvas.width, canvas.height);
-
-        if(!Array.isArray(corners) || corners.length !== 4) return;
-        ctx.beginPath(); ctx.lineWidth = 2; ctx.strokeStyle = '#ef4444';
-        ctx.moveTo(corners[0].x * canvas.width, corners[0].y * canvas.height);
-        for(let i=1; i<4; i++) ctx.lineTo(corners[i].x * canvas.width, corners[i].y * canvas.height);
-        ctx.closePath(); ctx.stroke();
+        
+        ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 2;
+        ctx.beginPath();
+        if(corners.length === 4) {
+            ctx.moveTo(corners[0].x * canvas.width, corners[0].y * canvas.height);
+            for(let i=1; i<4; i++) ctx.lineTo(corners[i].x * canvas.width, corners[i].y * canvas.height);
+            ctx.closePath(); ctx.stroke();
+        }
 
         ctx.fillStyle = '#00ff00'; 
-        const dotRadius = Math.max(2, canvas.width * 0.007); 
+        const dotRadius = Math.max(2, canvas.width * 0.007);
         for (let r = 0; r < GRID_ROWS; r++) {
             for (let c = 0; c < GRID_COLS; c++) {
-                let isRelevant = false;
-                if(r < 10 && c < 7) isRelevant = true;
-                else if(r < 10 && c >= 9 && c <= 16) isRelevant = true;
-                else if(r >= 11) {
-                    if((c>=2 && c<=6) || (c>=11 && c<=15) || (c>=20 && c<=24) || (c>=29 && c<=33)) isRelevant = true;
-                }
+                let isRelevant = (r<10 && c<7) || (r<10 && c>=9 && c<=16) || (r>=11 && ((c>=2 && c<=6) || (c>=11 && c<=15) || (c>=20 && c<=24) || (c>=29 && c<=33)));
                 if (isRelevant) {
-                    let pt = getGridPointVisual(r, c);
+                    let pt = getGridPoint(r, c);
                     ctx.beginPath(); ctx.arc(pt.x, pt.y, dotRadius, 0, Math.PI*2); ctx.fill();
                 }
             }
         }
+        
         corners.forEach(p => {
             ctx.beginPath(); ctx.arc(p.x*canvas.width, p.y*canvas.height, 8, 0, Math.PI*2);
             ctx.fillStyle='#dc2626'; ctx.fill(); ctx.strokeStyle='white'; ctx.stroke();
         });
     }
 
-    function getGridPointVisual(row, col) {
-        let u = (col) / (GRID_COLS - 1); 
-        let v = (row) / (GRID_ROWS - 1);
+    function getGridPoint(row, col) {
+        let u = (col) / (GRID_COLS - 1), v = (row) / (GRID_ROWS - 1);
         let xTop = corners[0].x + (corners[1].x - corners[0].x) * u;
         let yTop = corners[0].y + (corners[1].y - corners[0].y) * u;
         let xBot = corners[3].x + (corners[2].x - corners[3].x) * u;
         let yBot = corners[3].y + (corners[2].y - corners[3].y) * u;
-        let x = xTop + (xBot - xTop) * v;
-        let y = yTop + (yBot - yTop) * v;
-        return { x: x * canvas.width, y: y * canvas.height };
+        return { x: (xTop + (xBot - xTop) * v) * canvas.width, y: (yTop + (yBot - yTop) * v) * canvas.height };
     }
 
+    // Drag Logic
+    let activeCorner = -1;
     function startDrag(e) {
         if(!imgObj.src) return;
         if(e.cancelable) e.preventDefault();
         const rect = canvas.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        const px = (clientX - rect.left) / rect.width;
-        const py = (clientY - rect.top) / rect.height;
-        const d = 30 / rect.width;
-        activeCorner = -1;
-        corners.forEach((p, i) => { if(Math.hypot(p.x - px, p.y - py) < d) activeCorner = i; });
+        const cx = e.touches ? e.touches[0].clientX : e.clientX;
+        const cy = e.touches ? e.touches[0].clientY : e.clientY;
+        const px = (cx - rect.left) / rect.width, py = (cy - rect.top) / rect.height;
+        activeCorner = corners.findIndex(p => Math.hypot(p.x - px, p.y - py) < 30/rect.width);
     }
-
     function drag(e) {
         if(activeCorner === -1) return;
         if(e.cancelable) e.preventDefault();
         const rect = canvas.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        const px = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-        const py = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
-        corners[activeCorner] = {x:px, y:py};
-        draw(); 
+        const cx = e.touches ? e.touches[0].clientX : e.clientX;
+        const cy = e.touches ? e.touches[0].clientY : e.clientY;
+        corners[activeCorner] = {
+            x: Math.max(0, Math.min(1, (cx - rect.left) / rect.width)), 
+            y: Math.max(0, Math.min(1, (cy - rect.top) / rect.height))
+        };
+        draw();
     }
+    function endDrag() { if(activeCorner!==-1) localStorage.setItem('omr_fixed_v4', JSON.stringify(corners)); activeCorner = -1; }
+    function loadLayout() { try { corners = JSON.parse(localStorage.getItem('omr_fixed_v4')) || corners; } catch(e){} }
 
-    function endDrag() { 
-        if(activeCorner !== -1) localStorage.setItem('omr_fixed_v4', JSON.stringify(corners));
-        activeCorner = -1; 
+    // --- SCANNER ---
+    async function processFile(file) {
+        if (!file) return;
+        document.getElementById('loader').style.display = 'flex';
+        
+        if (file.type === 'application/pdf') {
+            try {
+                const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+                const page = await pdf.getPage(1);
+                const vp = page.getViewport({ scale: 2.0 });
+                const cvs = document.createElement('canvas'); cvs.width = vp.width; cvs.height = vp.height;
+                await page.render({ canvasContext: cvs.getContext('2d'), viewport: vp }).promise;
+                imgObj.src = cvs.toDataURL('image/jpeg', 0.9);
+            } catch (e) { alert("PDF Error"); document.getElementById('loader').style.display='none'; return; }
+        } else {
+            const reader = new FileReader();
+            reader.onload = e => imgObj.src = e.target.result;
+            reader.readAsDataURL(file);
+        }
+        imgObj.onload = () => {
+            document.getElementById('upload-hint').style.display='none';
+            document.getElementById('scanBtn').disabled=false;
+            resizeCanvas();
+            document.getElementById('loader').style.display='none';
+        }
     }
-    function loadLayout() {
+    
+    function handleFileSelect(inp) { processFile(inp.files[0]); }
+    async function handleMobilePaste() {
         try {
-            const saved = localStorage.getItem('omr_fixed_v4');
-            if(saved) corners = JSON.parse(saved);
-        } catch(e) {}
+            const items = await navigator.clipboard.read();
+            for (const item of items) {
+                if (item.types[0].startsWith('image/')) { processFile(await item.getType(item.types[0])); return; }
+            }
+        } catch(e){}
     }
 
     function processScan() {
         document.getElementById('loader').style.display = 'flex';
-        
         setTimeout(() => {
-            const dataCanvas = document.createElement('canvas');
-            dataCanvas.width = imgObj.naturalWidth;
-            dataCanvas.height = imgObj.naturalHeight;
-            const dataCtx = dataCanvas.getContext('2d');
-            dataCtx.drawImage(imgObj, 0, 0);
+            const dCvs = document.createElement('canvas');
+            dCvs.width = imgObj.naturalWidth; dCvs.height = imgObj.naturalHeight;
+            const dCtx = dCvs.getContext('2d');
+            dCtx.drawImage(imgObj, 0, 0);
 
-            function getPixelDarkness(row, col) {
-                let u = (col) / (GRID_COLS - 1); 
-                let v = (row) / (GRID_ROWS - 1);
-                let xTop = corners[0].x + (corners[1].x - corners[0].x) * u;
-                let yTop = corners[0].y + (corners[1].y - corners[0].y) * u;
-                let xBot = corners[3].x + (corners[2].x - corners[3].x) * u;
-                let yBot = corners[3].y + (corners[2].y - corners[3].y) * u;
-                let rx = (xTop + (xBot - xTop) * v) * dataCanvas.width;
-                let ry = (yTop + (yBot - yTop) * v) * dataCanvas.height;
-                let sx = Math.floor(rx);
-                let sy = Math.floor(ry);
-                if(sx < 0 || sy < 0 || sx >= dataCanvas.width || sy >= dataCanvas.height) return 255;
-                let sampleSize = Math.max(1, Math.floor(dataCanvas.width * 0.004));
+            const getVal = (r, c) => {
+                let u = c/(GRID_COLS-1), v = r/(GRID_ROWS-1);
+                let xT = corners[0].x + (corners[1].x-corners[0].x)*u, yT = corners[0].y + (corners[1].y-corners[0].y)*u;
+                let xB = corners[3].x + (corners[2].x-corners[3].x)*u, yB = corners[3].y + (corners[2].y-corners[3].y)*u;
+                let px = Math.floor((xT + (xB-xT)*v) * dCvs.width), py = Math.floor((yT + (yB-yT)*v) * dCvs.height);
                 try {
-                    let p = dataCtx.getImageData(sx - Math.floor(sampleSize/2), sy - Math.floor(sampleSize/2), sampleSize, sampleSize).data;
-                    let total = 0;
-                    for(let i=0; i<p.length; i+=4) total += (p[i]*0.3 + p[i+1]*0.59 + p[i+2]*0.11);
-                    return total/(p.length/4);
+                    let d = dCtx.getImageData(px-2, py-2, 5, 5).data, sum=0;
+                    for(let i=0; i<d.length; i+=4) sum += (d[i]*0.3 + d[i+1]*0.59 + d[i+2]*0.11);
+                    return sum/(d.length/4);
                 } catch(e) { return 255; }
-            }
+            };
 
             detectedRoll = "";
-            const digitMap = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
             for(let c=0; c<=6; c++) {
-                let minV = 255, digit = "?";
-                for(let r=0; r<=9; r++) {
-                    let val = getPixelDarkness(r, c);
-                    if(val < minV) { minV = val; if(val < 155) digit = digitMap[r]; }
-                }
-                detectedRoll += digit;
+                let min=255, d="?";
+                for(let r=0; r<=9; r++) { let v=getVal(r,c); if(v<min){ min=v; if(v<155) d=['1','2','3','4','5','6','7','8','9','0'][r]; } }
+                detectedRoll += d;
             }
 
             detectedBooklet = "";
             for(let c=9; c<=16; c++) {
-                let minV = 255, digit = "?";
-                for(let r=0; r<=9; r++) {
-                    let val = getPixelDarkness(r, c);
-                    if(val < minV) { minV = val; if(val < 155) digit = digitMap[r]; }
-                }
-                detectedBooklet += digit;
+                let min=255, d="?";
+                for(let r=0; r<=9; r++) { let v=getVal(r,c); if(v<min){ min=v; if(v<155) d=['1','2','3','4','5','6','7','8','9','0'][r]; } }
+                detectedBooklet += d;
             }
             detectedBooklet = detectedBooklet.replace(/\?+$/, '');
 
             detectedAnswers.fill(null);
-            const blocks = [{c:2,o:0}, {c:11,o:30}, {c:20,o:60}, {c:29,o:90}];
-            blocks.forEach(b => {
+            [{c:2,o:0},{c:11,o:30},{c:20,o:60},{c:29,o:90}].forEach(b => {
                 for(let r=0; r<30; r++) {
-                    let qIdx = b.o + r;
-                    let gridRow = 11 + r;
-                    let best = null, minV = 255;
-                    for(let opt=0; opt<5; opt++) {
-                        let val = getPixelDarkness(gridRow, b.c + opt);
-                        if(val < minV) { minV = val; if(val < 145) best = optionsList[opt]; }
-                    }
-                    detectedAnswers[qIdx] = best;
+                    let min=255, best=null;
+                    for(let o=0; o<5; o++) { let v=getVal(11+r, b.c+o); if(v<min){ min=v; if(v<145) best=optionsList[o]; } }
+                    detectedAnswers[b.o+r] = best;
                 }
             });
 
             calculateResult();
-            document.getElementById('loader').style.display = 'none';
-            document.getElementById('result-card').style.display = 'block';
-            document.getElementById('result-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
-
+            document.getElementById('loader').style.display='none';
+            document.getElementById('result-card').style.display='block';
+            document.getElementById('result-card').scrollIntoView({ behavior: 'smooth' });
         }, 200);
     }
 
     function calculateResult() {
         document.getElementById('res-roll').innerText = detectedRoll;
         document.getElementById('res-booklet').innerText = detectedBooklet;
-        
         getStudentData(detectedRoll);
 
-        let rollNum = parseInt(detectedRoll.replace(/\D/g, ''));
-        let foundShift = SHIFT_RANGES.find(s => rollNum >= s.min && rollNum <= s.max);
-        let currentShiftId = null;
+        let rNum = parseInt(detectedRoll.replace(/\D/g, ''));
+        let shift = SHIFT_RANGES.find(s => rNum >= s.min && rNum <= s.max);
         
-        if(foundShift) {
-            currentShiftId = foundShift.id;
-            document.getElementById('res-shift').innerText = foundShift.label;
+        if(shift) {
+            document.getElementById('res-shift').innerText = shift.label;
             document.getElementById('res-shift').style.background = '#dcfce7';
-            document.getElementById('res-shift').style.color = '#166534';
+            if(typeof allShiftData !== 'undefined') autoCalculateBestSet(allShiftData[shift.id]);
         } else {
             document.getElementById('res-shift').innerText = "Check Roll No";
             document.getElementById('res-shift').style.background = '#fee2e2';
-            document.getElementById('res-shift').style.color = '#991b1b';
-            return;
-        }
-
-        if(typeof allShiftData !== 'undefined') {
-            const sData = allShiftData[currentShiftId];
-            autoCalculateBestSet(sData);
-        } else {
-            alert("OMR Marks 0.00 rahenge kyunki 'questions-data.js' file missing hai!");
         }
     }
 
-   function autoCalculateBestSet(sData) {
+    function autoCalculateBestSet(sData) {
         const validQ = sData.questions.length - sData.questions.filter(q => q.deleted).length;
-        const marksPerQ = validQ > 0 ? (200 / validQ) : 0;
-        const negMark = marksPerQ / 3;
-        const blankPenalty = 200 / 120; 
+        const mpq = validQ > 0 ? (200 / validQ) : 0;
+        const neg = mpq / 3;
+        const blankPen = 200 / 120;
 
         let bestScore = -Infinity, bestSet = "", bestStats = {};
-
-        Object.keys(sData.seriesOrder).forEach(setCode => {
-            let stats = getScore(setCode, sData, marksPerQ, negMark, blankPenalty);
-            if(stats.score > bestScore) {
-                bestScore = stats.score;
-                bestSet = setCode;
-                bestStats = stats;
-            }
+        Object.keys(sData.seriesOrder).forEach(set => {
+            let st = getScore(set, sData, mpq, neg, blankPen);
+            if(st.score > bestScore) { bestScore = st.score; bestSet = set; bestStats = st; }
         });
 
         document.getElementById('detected-set').innerText = bestSet;
         document.getElementById('res-score').innerText = bestScore.toFixed(4);
         document.getElementById('res-correct').innerText = bestStats.c;
         document.getElementById('res-wrong').innerText = bestStats.w;
+        document.getElementById('res-skip').innerText = bestStats.s;
+        if(bestStats.u>0) document.getElementById('res-skip').innerHTML = `${bestStats.s} <span style="font-size:0.5rem; color:red">(${bestStats.u} Blank)</span>`;
         document.getElementById('res-deleted').innerText = bestStats.d;
-        
-        if(bestStats.u > 0) {
-            document.getElementById('res-skip').innerHTML = `${bestStats.s} <span style="font-size:0.6rem; color:#dc2626; display:block;">(${bestStats.u} Blank)</span>`;
-        } else {
-            document.getElementById('res-skip').innerText = bestStats.s;
-        }
-        
-        const gridDiv = document.getElementById('detected-grid');
-        gridDiv.innerHTML = '';
-        const qOrder = sData.seriesOrder[bestSet];
 
+        // Render Grids
+        renderGrid('detected-grid', bestSet, sData, false); // Screen
+        renderGrid('print-answers-grid', bestSet, sData, true); // Print Page 2
+    }
+
+    function renderGrid(containerId, set, sData, isPrint) {
+        const grid = document.getElementById(containerId);
+        grid.innerHTML = '';
+        const qOrder = sData.seriesOrder[set];
+        
         detectedAnswers.forEach((ans, i) => {
             let d = document.createElement('div');
-            let className = 'd-cell ' + (ans ? 'filled' : '');
+            // Class selection based on Print vs Screen
+            let baseClass = isPrint ? 'p2-cell' : 'd-cell';
+            let filledClass = isPrint ? 'p2-filled' : 'filled';
+            let delClass = isPrint ? 'p2-del' : 'deleted';
+            
+            let cls = baseClass + (ans ? ' ' + filledClass : '');
             
             if (qOrder && qOrder[i]) {
-                const masterIdx = qOrder[i];
-                const masterQ = sData.questions[masterIdx - 1];
-                if (masterQ && masterQ.deleted) {
-                    className += ' deleted'; 
-                }
+                const mQ = sData.questions[qOrder[i] - 1];
+                if (mQ && mQ.deleted) cls += ' ' + delClass;
             }
-            if (!ans) d.style.border = "1px solid red"; 
+            if(!ans) d.style.border = "1px solid red";
 
-            d.className = className;
+            d.className = cls;
             d.innerText = (i+1) + (ans ? ':' + ans : '');
-            gridDiv.appendChild(d);
+            grid.appendChild(d);
         });
-        document.getElementById('preview-grid-wrapper').style.display = 'block';
     }
 
-   function getScore(setCode, sData, marksPerQ, negMark, blankPenalty) {
-        let c = 0, w = 0, s = 0, d = 0, u = 0;
-        const qOrder = sData.seriesOrder[setCode];
-        const optConfig = sData.seriesOptionOrder ? sData.seriesOptionOrder[setCode] : null;
+    function getScore(set, sData, mpq, neg, blankPen) {
+        let c=0, w=0, s=0, d=0, u=0;
+        const qOrder = sData.seriesOrder[set];
+        const optCfg = sData.seriesOptionOrder ? sData.seriesOptionOrder[set] : null;
 
-        qOrder.forEach((masterIdx, userIdx) => {
-            if (userIdx >= detectedAnswers.length) return;
-            const masterQ = sData.questions[masterIdx - 1];
+        qOrder.forEach((mIdx, uIdx) => {
+            if (uIdx >= detectedAnswers.length) return;
+            const mQ = sData.questions[mIdx - 1];
             
-            if (masterQ.deleted) { d++; return; }
-            const userAns = detectedAnswers[userIdx];
+            if (mQ.deleted) { d++; return; }
+            const uAns = detectedAnswers[uIdx];
+            
+            if (!uAns) { u++; return; }
+            if (uAns === 'E') { s++; return; }
 
-            if (!userAns) { u++; return; }
-            if (userAns === 'E') { s++; return; }
-
-            let pattern = [0, 1, 2, 3, 4];
-            if (optConfig) {
-                if (Array.isArray(optConfig)) pattern = optConfig;
-                else pattern = optConfig[masterQ.id] || optConfig['default'] || pattern;
-            }
-
-            const visualIdx = optionsList.indexOf(userAns);
-            const masterOptIdx = pattern[visualIdx];
-            if (!masterQ.options[masterOptIdx]) { w++; return; }
-            const selText = masterQ.options[masterOptIdx].substring(3).trim();
-            const corText = masterQ.answer.substring(3).trim();
-            if (selText === corText) c++; else w++;
+            let pat = [0,1,2,3,4];
+            if (optCfg) pat = (Array.isArray(optCfg) ? optCfg : (optCfg[mQ.id] || optCfg['default'] || pat));
+            
+            const vIdx = optionsList.indexOf(uAns);
+            const mOptIdx = pat[vIdx];
+            
+            if (!mQ.options[mOptIdx]) { w++; return; }
+            const sel = mQ.options[mOptIdx].substring(3).trim();
+            const cor = mQ.answer.substring(3).trim();
+            (sel === cor) ? c++ : w++;
         });
 
-        let totalScore = (c * marksPerQ) - (w * negMark) - (u * blankPenalty);
-        return { score: totalScore, c, w, s, d, u };
+        return { score: (c*mpq)-(w*neg)-(u*blankPen), c, w, s, d, u };
     }
 
-    // --- TRIGGER PRINT (Mobile Fixed) ---
     function triggerPrint() {
-        const d = new Date();
-        document.getElementById('p-date').innerText = d.toLocaleDateString();
+        const d = new Date().toLocaleDateString();
+        document.getElementById('p-date').innerText = d;
         
-        // Populate Data
-        document.getElementById('p-roll').innerText = document.getElementById('res-roll').innerText;
-        document.getElementById('p-booklet').innerText = document.getElementById('res-booklet').innerText;
-        document.getElementById('p-shift').innerText = document.getElementById('res-shift').innerText;
+        // Fill Data
+        ['roll','booklet','shift','score','correct','wrong','deleted','skip'].forEach(id => {
+            document.getElementById('p-'+id).innerText = document.getElementById('res-'+id).innerText;
+        });
         document.getElementById('p-set').innerText = document.getElementById('detected-set').innerText;
         
-        document.getElementById('p-score').innerText = document.getElementById('res-score').innerText;
-        document.getElementById('p-correct').innerText = document.getElementById('res-correct').innerText;
-        document.getElementById('p-wrong').innerText = document.getElementById('res-wrong').innerText;
-        document.getElementById('p-deleted').innerText = document.getElementById('res-deleted').innerText;
-        document.getElementById('p-skip').innerText = document.getElementById('res-skip').innerText;
-        
-        if(imgObj.src) {
-             document.getElementById('print-omr-img').src = imgObj.src;
-        }
-        
-        // Show Print Container (Force Display Block)
-        const pCont = document.getElementById('print-container');
-        pCont.style.display = 'block';
+        if(imgObj.src) document.getElementById('print-omr-img').src = imgObj.src;
 
-        setTimeout(() => {
-            window.print();
-            // Optional: Hide again after print dialog closes (though not strictly necessary as css handles media)
-        }, 500);
+        // Page 2 Logic
+        const includeAnswers = document.getElementById('print-answers-opt').checked;
+        const page2 = document.getElementById('print-page-2');
+        
+        if(includeAnswers) {
+            page2.style.display = 'block';
+            document.getElementById('p2-roll').innerText = document.getElementById('res-roll').innerText;
+            // Name already filled by getStudentData
+        } else {
+            page2.style.display = 'none';
+        }
+
+        document.getElementById('print-container').style.display = 'block';
+        setTimeout(() => window.print(), 500);
     }
 </script>
-<script>
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');
-</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');</script>
 </body>
 </html>
