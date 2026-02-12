@@ -319,13 +319,27 @@
         <div class="result-header">
             <div class="score-val" id="res-score">0.00</div>
             <div style="font-size:0.7rem; opacity:0.9;">OMR Scan Score (Raw)</div>
-            <div class="meta-info">
-                <div>Roll: <b id="res-roll">--</b></div>
+         <div class="meta-info">
+                <div onclick="openRollPopup()" style="cursor:pointer;" title="Tap to Edit Roll No">
+                    Roll: <b id="res-roll">--</b>
+                </div>
                 <div>Booklet: <b id="res-booklet">--</b></div>
             </div>
             <div style="margin-top:5px; font-size:0.7rem; background:rgba(0,0,0,0.2); padding:3px; border-radius:4px;" id="res-shift">Detecting...</div>
         </div>
+          <div id="rollPopup" class="login-overlay" style="display:none; background:rgba(0,0,0,0.8);">
+    <div class="login-card" style="max-width:280px;">
+        <h3 style="margin-top:0; color:#2563eb;">Correct Roll No.</h3>
+        <p style="font-size:0.8rem; color:#64748b; margin-bottom:15px;">Enter correct 7-digit Roll Number to re-check result.</p>
         
+        <input type="number" id="popup-roll-inp" class="login-inp" placeholder="Ex: 1234567" style="font-size:1.2rem; text-align:center; letter-spacing:2px; font-weight:bold;">
+        
+        <div style="display:flex; gap:10px; margin-top:10px;">
+            <button class="btn btn-outline" onclick="document.getElementById('rollPopup').style.display='none'">Cancel</button>
+            <button class="btn btn-primary" onclick="submitRollUpdate()">Update & Check</button>
+        </div>
+    </div>
+</div>
         <div class="stats-grid">
             <div class="stat-item"><span class="st-num c-green" id="res-correct">0</span><span class="st-lbl">Right</span></div>
             <div class="stat-item"><span class="st-num c-red" id="res-wrong">0</span><span class="st-lbl">Wrong</span></div>
@@ -984,11 +998,17 @@ function loadToCanvas(imgElement) {
         }, 200);
     }
 
-    function calculateResult() {
-        document.getElementById('res-roll').innerText = detectedRoll;
+  function calculateResult() {
+        // 1. Result UI me Roll Number dikhana (Input box hatakar wapis text kar diya)
+        const rollEl = document.getElementById('res-roll');
+        if(rollEl) rollEl.innerText = detectedRoll;
+        
         document.getElementById('res-booklet').innerText = detectedBooklet;
+        
+        // 2. Data fetch call
         getStudentData(detectedRoll);
 
+        // 3. Shift Detection Logic
         let rNum = parseInt(detectedRoll.replace(/\D/g, ''));
         let shift = SHIFT_RANGES.find(s => rNum >= s.min && rNum <= s.max);
         
@@ -999,6 +1019,59 @@ function loadToCanvas(imgElement) {
         } else {
             document.getElementById('res-shift').innerText = "Check Roll No";
             document.getElementById('res-shift').style.background = '#fee2e2';
+        }
+    }
+
+    // --- POPUP JS FUNCTIONS ---
+
+    function openRollPopup() {
+        // Popup kholne ka code
+        const currentRoll = document.getElementById('res-roll').innerText;
+        const popup = document.getElementById('rollPopup');
+        const inp = document.getElementById('popup-roll-inp');
+        
+        // Value set karein
+        inp.value = currentRoll.replace(/\D/g,''); 
+        
+        // Popup dikhayein (Flex use karein taaki center ho)
+        popup.style.display = 'flex';
+        
+        // Input par focus karein
+        setTimeout(() => inp.focus(), 100);
+    }
+
+    function submitRollUpdate() {
+        const inp = document.getElementById('popup-roll-inp');
+        const newRoll = inp.value.trim();
+        
+        if(!newRoll || newRoll.length < 5) {
+            alert("Please enter valid Roll Number");
+            return;
+        }
+
+        // 1. UI Update
+        document.getElementById('res-roll').innerText = newRoll;
+        document.getElementById('rollPopup').style.display = 'none';
+        
+        // 2. Data Fetch
+        getStudentData(newRoll);
+
+        // 3. Shift check & Re-calculate
+        let rNum = parseInt(newRoll);
+        let shift = SHIFT_RANGES.find(s => rNum >= s.min && rNum <= s.max);
+
+        if(shift) {
+            document.getElementById('res-shift').innerText = shift.label;
+            document.getElementById('res-shift').style.background = '#595FFF';
+            
+            if(typeof allShiftData !== 'undefined') {
+                autoCalculateBestSet(allShiftData[shift.id]);
+                alert("Updated! Shift: " + shift.label);
+            }
+        } else {
+            document.getElementById('res-shift').innerText = "Range Error";
+            document.getElementById('res-shift').style.background = '#fee2e2';
+            alert("Roll number shift range se bahar hai!");
         }
     }
 
@@ -1299,6 +1372,122 @@ function loadToCanvas(imgElement) {
             btn.disabled = false;
         }
     }
+  // 1. Popup Open Function
+    function openRollPopup() {
+        const currentRoll = document.getElementById('res-roll').innerText;
+        document.getElementById('popup-roll-inp').value = currentRoll.replace(/\D/g,''); // Sirf numbers
+        document.getElementById('rollPopup').style.display = 'flex';
+        document.getElementById('popup-roll-inp').focus();
+    }
+
+    // 2. Submit & Re-Check Function
+    function submitRollUpdate() {
+        const newRoll = document.getElementById('popup-roll-inp').value.trim();
+        
+        if(!newRoll || newRoll.length < 5) {
+            alert("Please enter valid Roll Number");
+            return;
+        }
+
+        // A. UI Update
+        document.getElementById('res-roll').innerText = newRoll;
+        document.getElementById('rollPopup').style.display = 'none';
+        
+        // B. Data Fetch (Online Data)
+        getStudentData(newRoll);
+
+        // C. Shift Calculation & OMR Re-check
+        let rNum = parseInt(newRoll);
+        let shift = SHIFT_RANGES.find(s => rNum >= s.min && rNum <= s.max);
+
+        if(shift) {
+            document.getElementById('res-shift').innerText = shift.label;
+            document.getElementById('res-shift').style.background = '#595FFF';
+            
+            // Re-run checking logic with new Shift Data
+            if(typeof allShiftData !== 'undefined') {
+                autoCalculateBestSet(allShiftData[shift.id]);
+                
+                // User Feedback
+                const msg = document.createElement('div');
+                msg.innerHTML = `<div style="position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#16a34a; color:white; padding:10px 20px; border-radius:30px; z-index:10000; font-weight:bold; box-shadow:0 5px 15px rgba(0,0,0,0.2);">
+                    <i class="fas fa-check-circle"></i> Result Updated!
+                </div>`;
+                document.body.appendChild(msg);
+                setTimeout(() => msg.remove(), 2500);
+            }
+        } else {
+            document.getElementById('res-shift').innerText = "Unknown Shift";
+            document.getElementById('res-shift').style.background = '#fee2e2';
+            alert("Warning: This Roll Number is outside known Shift ranges.");
+        }
+    }
+  // --- FINAL POPUP FIX (GLOBAL SCOPE) ---
+
+    // 1. Popup Open Function (Global)
+    window.openRollPopup = function() {
+        const rollEl = document.getElementById('res-roll');
+        if(!rollEl) return;
+        
+        const currentRoll = rollEl.innerText.replace(/\D/g,'');
+        const popup = document.getElementById('rollPopup');
+        const inp = document.getElementById('popup-roll-inp');
+        
+        if(popup && inp) {
+            inp.value = currentRoll;
+            popup.style.display = 'flex';
+            setTimeout(() => inp.focus(), 100);
+        } else {
+            alert("Error: Popup HTML missing!");
+        }
+    };
+
+    // 2. Submit & Re-Process Function
+    window.submitRollUpdate = function() {
+        const inp = document.getElementById('popup-roll-inp');
+        const newRoll = inp.value.trim();
+        
+        if(!newRoll || newRoll.length < 5) {
+            alert("Please enter valid Roll Number");
+            return;
+        }
+
+        // A. UI Update (Screen par naya roll number dikhayein)
+        document.getElementById('res-roll').innerText = newRoll;
+        document.getElementById('rollPopup').style.display = 'none';
+        
+        // B. Data Fetch (Server se naam/pita ka naam layein)
+        if(typeof getStudentData === 'function') getStudentData(newRoll);
+
+        // C. RE-PROCESS OMR (Ye hai main Manual Fix logic)
+        // Naye Roll Number se Shift pata karein aur OMR dubara check karein
+        let rNum = parseInt(newRoll);
+        if(typeof SHIFT_RANGES !== 'undefined') {
+            let shift = SHIFT_RANGES.find(s => rNum >= s.min && rNum <= s.max);
+
+            if(shift) {
+                document.getElementById('res-shift').innerText = shift.label;
+                document.getElementById('res-shift').style.background = '#595FFF';
+                
+                // DATA RE-CALCULATION TRIGGER
+                if(typeof allShiftData !== 'undefined' && allShiftData[shift.id]) {
+                    autoCalculateBestSet(allShiftData[shift.id]);
+                    
+                    // Success Message
+                    const msg = document.createElement('div');
+                    msg.innerHTML = `<div style="position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#16a34a; color:white; padding:10px 20px; border-radius:30px; z-index:10000; font-weight:bold; box-shadow:0 5px 15px rgba(0,0,0,0.3);">
+                        <i class="fas fa-check-circle"></i> Result Updated!
+                    </div>`;
+                    document.body.appendChild(msg);
+                    setTimeout(() => msg.remove(), 2500);
+                }
+            } else {
+                document.getElementById('res-shift').innerText = "Unknown Shift";
+                document.getElementById('res-shift').style.background = '#fee2e2';
+                alert("Roll Number shift range se bahar hai, lekin update kar diya gaya hai.");
+            }
+        }
+    };
 </script>
 <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');</script>
 </body>
