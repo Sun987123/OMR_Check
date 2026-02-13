@@ -1079,7 +1079,7 @@ function loadToCanvas(imgElement) {
         const validQ = sData.questions.length - sData.questions.filter(q => q.deleted).length;
         const mpq = validQ > 0 ? (200 / validQ) : 0;
         const neg = mpq / 3;
-        const blankPen = 200 / 120;
+        const blankPen = mpq / 3;
 
         let bestScore = -Infinity, bestSet = "", bestStats = {};
         Object.keys(sData.seriesOrder).forEach(set => {
