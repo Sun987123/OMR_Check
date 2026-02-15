@@ -141,16 +141,22 @@
             .meta-info { font-size: 0.85rem; } /* Roll no thoda chota */
         }
         
-        /* Updated Shift Band to match Roll/Booklet style */
+       /* Combined Shift & Set Band */
         .shift-band {
-            background: rgba(0,0,0,0.2) !important; /* Transparent Dark */
-            padding: 6px; 
-            border-radius: 6px; 
-            font-size: 0.85rem; 
-            margin-top: 8px;
-            border: 1px solid rgba(255,255,255,0.1);
-            text-align: center;
-            font-weight: 600;
+            background: rgba(0,0,0,0.25) !important; /* Dark Transparent */
+            padding: 8px 12px; 
+            border-radius: 8px; 
+            margin-top: 12px;
+            border: 1px solid rgba(255,255,255,0.15);
+            
+            /* Flexbox to separate Shift (Left) and Set (Right) */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: rgba(255,255,255,0.95);
         }
         .meta-info { display: flex; justify-content: space-between; background: rgba(255,255,255,0.1); padding: 6px; border-radius: 6px; font-size: 0.8rem; margin-top: 10px; }
 
@@ -379,7 +385,7 @@
             </div>
         </div>
 
-      <div class="result-header" id="main-res-header">
+     <div class="result-header" id="main-res-header">
             <div class="header-top-row">
                 <div class="set-badge" style="background:rgba(0,0,0,0.2); font-size:0.65rem; letter-spacing:0.5px; white-space:nowrap;">
                     OMR SCORE (RAW)
@@ -391,19 +397,19 @@
 
             <div class="score-val" id="res-score">0.00</div>
             
-            <div style="font-size:1rem; font-weight:700; margin-bottom:10px; color:rgba(255,255,255,0.9);">
-                SET: <span id="detected-set">--</span>
-            </div>
-            
-            <div class="meta-info">
+            <div class="meta-info" style="margin-bottom: 5px;">
                 <div onclick="openRollPopup()" style="cursor:pointer;" title="Tap to Edit Roll No">
                     Roll: <b id="res-roll">--</b>
                 </div>
                 <div>Booklet: <b id="res-booklet">--</b></div>
             </div>
             
-            <div id="res-shift" class="shift-band">
-                Detecting...
+            <div class="shift-band">
+                <span id="res-shift">Detecting...</span>
+                
+                <span style="border-left:1px solid rgba(255,255,255,0.3); padding-left:10px; margin-left:10px; text-align:right;">
+                    SET: <span id="detected-set">--</span>
+                </span>
             </div>
             
             <div id="mismatch-msg" style="display:none; margin-top:8px; font-size:0.75rem; font-weight:bold; background:rgba(0,0,0,0.4); padding:5px; border-radius:4px; color:#fecaca; border:1px solid #f87171;">
