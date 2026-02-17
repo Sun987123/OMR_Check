@@ -5,7 +5,7 @@
     <meta name="theme-color" content="#1e1e2e">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OMR Master Scanner</title>
+    <title>OMR Analysis</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -1171,7 +1171,7 @@ function loadToCanvas(imgElement) {
         const validQ = sData.questions.length - sData.questions.filter(q => q.deleted).length;
         const mpq = validQ > 0 ? (200 / validQ) : 0;
         const neg = mpq / 3;
-        const blankPen = mpq / 3;
+        const blankPen = 200 / 120 / 3;
 
         let bestScore = -Infinity, bestSet = "", bestStats = {};
         Object.keys(sData.seriesOrder).forEach(set => {
